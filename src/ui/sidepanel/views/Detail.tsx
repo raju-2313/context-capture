@@ -49,12 +49,20 @@ export default function CaptureDetail({ captureId: initialCaptureId, onBack, onS
         if (ctx) setContext(ctx);
       }
 
+      let blob: Blob | null = null;
       if (cap.attachment_ids && cap.attachment_ids.length > 0) {
         const att = await attRepo.get(cap.attachment_ids[0]);
-        if (att && att.data_blob) {
-          const url = URL.createObjectURL(att.data_blob);
-          setScreenshotUrl(url);
+        blob = att?.blob || att?.data_blob || null;
+      }
+      if (!blob) {
+        const atts = await attRepo.getAttachmentsForCapture(cap.capture_id);
+        if (atts && atts.length > 0) {
+          blob = atts[0]?.blob || atts[0]?.data_blob || null;
         }
+      }
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        setScreenshotUrl(url);
       }
 
       // Find related captures

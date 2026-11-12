@@ -1,5 +1,5 @@
-import { useState, useRef } from "preact/hooks";
-import { projects as projRepo, captures as capRepo } from "../../data/repositories";
+import { useState, useRef, useEffect } from "preact/hooks";
+import { projects as projRepo, captures as capRepo, attachments as attRepo } from "../../data/repositories";
 import { CaptureEditModal } from "./CaptureEditModal";
 import { Toast } from "./Toast";
 import { clipboardIntegration } from "../../core/integrations/clipboard";
@@ -22,7 +22,53 @@ export function CaptureCard({
   const [addedMsg, setAddedMsg] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteToast, setShowDeleteToast] = useState(false);
+  const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [showFullImageModal, setShowFullImageModal] = useState(false);
   const deleteTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    setCurrentCapture(capture);
+  }, [capture]);
+
+  useEffect(() => {
+    let active = true;
+    let url: string | null = null;
+
+    if (currentCapture.type === "screenshot") {
+      setImageLoading(true);
+      (async () => {
+        try {
+          let blob: Blob | null = null;
+          if (currentCapture.attachment_ids && currentCapture.attachment_ids.length > 0) {
+            const att = await attRepo.get(currentCapture.attachment_ids[0]);
+            blob = att?.blob || att?.data_blob || null;
+          }
+          if (!blob) {
+            const atts = await attRepo.getAttachmentsForCapture(currentCapture.capture_id);
+            if (atts && atts.length > 0) {
+              blob = atts[0]?.blob || atts[0]?.data_blob || null;
+            }
+          }
+          if (blob && active) {
+            url = URL.createObjectURL(blob);
+            setScreenshotUrl(url);
+          }
+        } catch (e) {
+          console.error("Failed to load capture screenshot", e);
+        } finally {
+          if (active) setImageLoading(false);
+        }
+      })();
+    }
+
+    return () => {
+      active = false;
+      if (url && url.startsWith("blob:")) {
+        URL.revokeObjectURL(url);
+      }
+    };
+  }, [currentCapture.capture_id, currentCapture.type]);
 
   const typeLabel = currentCapture.type.charAt(0).toUpperCase() + currentCapture.type.slice(1);
   const typeColors: Record<string, string> = {
@@ -124,6 +170,33 @@ export function CaptureCard({
         {currentCapture.content_text && <div class="card-text">{currentCapture.content_text}</div>}
         {currentCapture.code_language && (
           <div class="code-block">{currentCapture.content_text}</div>
+        )}
+        {currentCapture.type === "screenshot" && (
+          <div class="card-screenshot-container">
+            {screenshotUrl ? (
+              <div
+                class="card-screenshot-wrapper"
+                onClick={() => setShowFullImageModal(true)}
+                title="Click to inspect full screenshot"
+              >
+                <img
+                  src={screenshotUrl}
+                  alt={currentCapture.source_title || "Screenshot"}
+                  class="card-screenshot-img"
+                  loading="lazy"
+                />
+                <div class="card-screenshot-badge">🔍 Expand</div>
+              </div>
+            ) : imageLoading ? (
+              <div class="card-screenshot-placeholder">
+                Loading screenshot...
+              </div>
+            ) : (
+              <div class="card-screenshot-placeholder">
+                📸 Screenshot saved
+              </div>
+            )}
+          </div>
         )}
         {currentCapture.user_note && (
           <div class="card-note">💬 {currentCapture.user_note}</div>
@@ -255,6 +328,22 @@ export function CaptureCard({
             }
           }}
         />
+      )}
+
+      {showFullImageModal && screenshotUrl && (
+        <div class="lightbox-backdrop" onClick={() => setShowFullImageModal(false)}>
+          <div class="lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <div class="lightbox-header">
+              <span class="lightbox-title">{currentCapture.source_title || "Screenshot"}</span>
+              <button class="lightbox-close" onClick={() => setShowFullImageModal(false)} aria-label="Close">
+                ✕
+              </button>
+            </div>
+            <div class="lightbox-body">
+              <img src={screenshotUrl} alt="Full Screenshot" class="lightbox-img" />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

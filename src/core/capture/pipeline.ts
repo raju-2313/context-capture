@@ -420,6 +420,7 @@ class CapturePipeline {
         source_title: tab.title ?? null,
         source_domain: tab.url ? new URL(tab.url).hostname : null,
         favicon_data: null,
+        favicon_url: tab.favIconUrl ?? (tab.url ? `https://www.google.com/s2/favicons?domain=${new URL(tab.url).hostname}&sz=32` : null),
         content_text: null,
         code_language: null,
         user_note: note ?? null,
@@ -430,6 +431,7 @@ class CapturePipeline {
         version: 1,
         owner_id: null,
         search_text: searchText,
+        attachment_ids: [attachmentId],
       };
 
       await capRepo.create(capture);

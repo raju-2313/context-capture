@@ -85,6 +85,11 @@ export class MessageRouter {
           tabId: tab.id,
           windowId: tab.windowId,
         });
+        try {
+          if (chrome.sidePanel?.open) {
+            await chrome.sidePanel.open({ windowId: tab.windowId });
+          }
+        } catch {}
         break;
       case "quick-note":
         await chrome.windows.create({

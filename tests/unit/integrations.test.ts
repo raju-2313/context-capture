@@ -83,3 +83,4 @@ describe("Phase 5: Integrations & Advanced Capabilities", () => {
     expect(voiceNoteIntegration.isSupported()).toBe(false);
   });
 });
+
