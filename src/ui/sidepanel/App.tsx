@@ -139,7 +139,7 @@ export default function SidePanelApp() {
             {activeTab === "thistab" && <ThisTab onViewDetail={(id) => setDetailCaptureId(id)} />}
             {activeTab === "all" && <All onViewDetail={(id) => setDetailCaptureId(id)} />}
             {activeTab === "contexts" && <Contexts />}
-            {activeTab === "projects" && <ProjectsView />}
+            {activeTab === "projects" && <ProjectsView onViewDetail={(id) => setDetailCaptureId(id)} />}
             {activeTab === "assistant" && <AssistantView onViewDetail={(id) => setDetailCaptureId(id)} />}
             {activeTab === "settings" && (
               <div class="empty-state" style={{ height: "auto", padding: 20 }}>

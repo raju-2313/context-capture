@@ -4,7 +4,7 @@ import { ProjectRecord, Capture } from "../../../shared/types";
 import { CaptureCard } from "../../components/CaptureCard";
 import { exportEngine } from "../../../core/export";
 
-export default function ProjectsView() {
+export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: string) => void } = {}) {
   const [projectList, setProjectList] = useState<ProjectRecord[]>([]);
   const [selectedProject, setSelectedProject] = useState<ProjectRecord | null>(null);
   const [projectCaptures, setProjectCaptures] = useState<Capture[]>([]);
@@ -111,6 +111,7 @@ export default function ProjectsView() {
                 key={cap.capture_id}
                 capture={cap}
                 onDelete={() => removeCapture(cap.capture_id)}
+                onViewDetail={onViewDetail}
               />
             ))
           )}
