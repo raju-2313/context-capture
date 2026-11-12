@@ -9,7 +9,7 @@ import CaptureDetail from "./views/Detail";
 import AssistantView from "./views/Assistant";
 import { SettingsIcon, SparklesIcon } from "../components/Icons";
 
-type Tab = "thistab" | "all" | "contexts" | "projects" | "assistant" | "settings";
+type Tab = "thistab" | "all" | "contexts" | "projects" | "assistant";
 
 export default function SidePanelApp() {
   const [activeTab, setActiveTab] = useState<Tab>("thistab");
@@ -90,7 +90,7 @@ export default function SidePanelApp() {
           onClick={() => { setActiveTab("thistab"); setDetailCaptureId(null); }}
           title="Ctrl+1"
         >
-          This Tab
+          Tab
         </button>
         <button
           class={`tab ${activeTab === "all" && !detailCaptureId ? "active" : ""}`}
@@ -99,14 +99,14 @@ export default function SidePanelApp() {
           onClick={() => { setActiveTab("all"); setDetailCaptureId(null); }}
           title="Ctrl+2"
         >
-          All {captureCount > 0 && (
+          Library {captureCount > 0 && (
             <span
               style={{
                 fontSize: 10,
                 fontWeight: 600,
-                background: "var(--highlight-subtle)",
-                color: "var(--color-highlight, #C6E354)",
-                border: "1px solid rgba(198, 227, 84, 0.3)",
+                background: "var(--sunset-orange-subtle)",
+                color: "var(--sunset-orange)",
+                border: "1px solid rgba(255, 107, 53, 0.3)",
                 borderRadius: 10,
                 padding: "1px 6px",
                 marginLeft: 4,
@@ -142,15 +142,7 @@ export default function SidePanelApp() {
           title="Ctrl+5"
           style={{ display: "inline-flex", alignItems: "center", gap: 5 }}
         >
-          <SparklesIcon size={13} color={activeTab === "assistant" ? "var(--color-highlight, #C6E354)" : "currentColor"} /> AI
-        </button>
-        <button
-          class={`tab ${activeTab === "settings" && !detailCaptureId ? "active" : ""}`}
-          role="tab"
-          aria-selected={activeTab === "settings"}
-          onClick={() => { setActiveTab("settings"); setDetailCaptureId(null); }}
-        >
-          Settings
+          <SparklesIcon size={13} color={activeTab === "assistant" ? "var(--ocean-blue-light)" : "currentColor"} /> Assistant
         </button>
       </nav>
       <div class="content">
@@ -171,20 +163,6 @@ export default function SidePanelApp() {
                 onViewDetail={(id) => setDetailCaptureId(id)}
                 initialQuery={assistantInitialQuery ?? undefined}
               />
-            )}
-            {activeTab === "settings" && (
-              <div class="empty-state" style={{ height: "auto", padding: 20 }}>
-                <h3>Settings</h3>
-                <p style={{ marginTop: 8, marginBottom: 16 }}>
-                  Manage privacy blocklist, storage usage, and data export.
-                </p>
-                <button
-                  class="btn btn-primary"
-                  onClick={() => chrome.runtime.openOptionsPage()}
-                >
-                  Open Full Settings Page
-                </button>
-              </div>
             )}
           </>
         )}

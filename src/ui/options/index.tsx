@@ -330,9 +330,9 @@ export default function Settings() {
               class="btn"
               style={{
                 width: "100%",
-                background: "rgba(77, 89, 227, 0.12)",
-                color: "var(--color-primary, #4D59E3)",
-                border: "1px solid rgba(77, 89, 227, 0.4)",
+                background: "var(--ocean-blue-subtle)",
+                color: "var(--ocean-blue-light)",
+                border: "1px solid rgba(2, 132, 199, 0.4)",
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -349,7 +349,7 @@ export default function Settings() {
               }}
               disabled={exporting === "obsidian"}
             >
-              <ObsidianIcon size={16} color="var(--color-primary, #4D59E3)" />
+              <ObsidianIcon size={16} color="var(--ocean-blue-light)" />
               {exporting === "obsidian" ? "Exporting Vault..." : "Export Obsidian Vault (with Wikilinks & Frontmatter)"}
             </button>
           </div>
@@ -376,7 +376,7 @@ export default function Settings() {
         {/* Phase 4: Grounded AI Assistant Settings */}
         <div class="settings-section">
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
-            <SparklesIcon size={14} color="var(--color-highlight, #C6E354)" />
+            <SparklesIcon size={14} color="var(--ocean-blue-light)" />
             <h4 style={{ margin: 0 }}>AI Knowledge Assistant</h4>
           </div>
           <div class="setting-row">

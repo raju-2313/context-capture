@@ -162,7 +162,7 @@ export default function CaptureDetail({ captureId: initialCaptureId, onBack, onS
           <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", textTransform: "uppercase" }}>
             Personal Note
           </label>
-          {noteSavedMsg && <span style={{ color: "var(--color-highlight, #C6E354)", fontSize: 11, fontWeight: 600 }}>{noteSavedMsg}</span>}
+          {noteSavedMsg && <span style={{ color: "var(--ocean-blue-light)", fontSize: 11, fontWeight: 600 }}>{noteSavedMsg}</span>}
         </div>
         <textarea
           class="input"

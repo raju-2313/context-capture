@@ -77,17 +77,17 @@ export default function QuickAdd() {
         flexDirection: "column",
         gap: 12,
         minWidth: 340,
-        background: "var(--bg, #0b0c11)",
-        color: "var(--text, #F6F6F6)",
+        background: "var(--bg, #090e17)",
+        color: "#ffffff",
       }}
     >
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--color-primary, #4D59E3)", boxShadow: "0 0 8px var(--color-primary, #4D59E3)" }}></span>
-          <strong style={{ fontSize: 13, letterSpacing: "-0.01em", color: "var(--color-neutral, #F6F6F6)" }}>ContextCapture</strong>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--sunset-orange, #ff6b35)", boxShadow: "0 0 8px var(--sunset-orange, #ff6b35)" }}></span>
+          <strong style={{ fontSize: 13, letterSpacing: "-0.01em", color: "#ffffff" }}>ContextCapture</strong>
         </div>
-        <div style={{ display: "flex", gap: 4, background: "var(--surface, #141622)", padding: 2, borderRadius: 6, border: "1px solid var(--border)" }}>
+        <div style={{ display: "flex", gap: 4, background: "var(--surface, #142036)", padding: 2, borderRadius: 6, border: "1px solid var(--border)" }}>
           <button
             class="btn"
             style={{
@@ -96,7 +96,7 @@ export default function QuickAdd() {
               display: "inline-flex",
               alignItems: "center",
               gap: 4,
-              background: type === "note" ? "var(--color-primary, #4D59E3)" : "transparent",
+              background: type === "note" ? "var(--ocean-blue, #0284c7)" : "transparent",
               color: type === "note" ? "#ffffff" : "var(--text-secondary)",
               border: "none",
             }}
@@ -112,7 +112,7 @@ export default function QuickAdd() {
               display: "inline-flex",
               alignItems: "center",
               gap: 4,
-              background: type === "question" ? "var(--color-rare, #ED4059)" : "transparent",
+              background: type === "question" ? "var(--sunset-orange, #ff6b35)" : "transparent",
               color: type === "question" ? "#ffffff" : "var(--text-secondary)",
               border: "none",
             }}
@@ -144,7 +144,7 @@ export default function QuickAdd() {
           disabled={loading}
           title="Capture active tab screenshot and open side panel"
         >
-          <ScreenshotIcon size={14} color="var(--color-rare, #ED4059)" /> Screenshot
+          <ScreenshotIcon size={14} color="var(--ocean-blue, #0284c7)" /> Screenshot
         </button>
         <button
           class="btn"
@@ -153,7 +153,7 @@ export default function QuickAdd() {
           disabled={loading}
           title="Bookmark active webpage into current context"
         >
-          <BookmarkIcon size={14} color="var(--color-primary, #4D59E3)" /> Bookmark
+          <BookmarkIcon size={14} color="var(--ocean-blue, #0284c7)" /> Bookmark
         </button>
       </div>
 

@@ -1,103 +1,104 @@
-/* ContextCapture — 4-Color Signature Craft Design System */
+/* ContextCapture — Ocean Blue + White + Sunset Orange Signature Design System */
 :root {
-  /* User Defined 4-Color Signature System:
-   * #4D59E3 — Main 1: Electric Royal Blue / Primary Brand
-   * #F6F6F6 — Main 2: Crisp Off-White / High-Contrast Neutral
-   * #C6E354 — Highlighting: Volt / Electric Lime (for highlights, live badges, active pills)
-   * #ED4059 — Rare Things: Vibrant Coral / Crimson (for destructive actions, critical alerts, rare flags)
+  /* Core Signature Palette:
+   * Ocean Blue:    #0284c7 (Primary Brand, interactive buttons, active indicators)
+   * Pure White:    #ffffff (Crisp high-contrast typography, headings, icons)
+   * Sunset Orange: #ff6b35 (Highlights, attention callouts, active live badges)
    */
-  --color-primary: #4D59E3;
-  --color-neutral: #F6F6F6;
-  --color-highlight: #C6E354;
-  --color-rare: #ED4059;
+  --ocean-blue: #0284c7;
+  --ocean-blue-hover: #0369a1;
+  --ocean-blue-light: #38bdf8;
+  --ocean-blue-subtle: rgba(2, 132, 199, 0.14);
+  --ocean-blue-glow: 0 0 16px rgba(2, 132, 199, 0.35);
 
-  /* Surfaces & Backgrounds */
-  --bg: #0b0c11;
-  --bg-subtle: #10121a;
-  --surface: #141622;
-  --surface-hover: #1c1f2e;
-  --card: #161825;
-  --card-hover: #1e2133;
-  --border: rgba(246, 246, 246, 0.08);
-  --border-hover: rgba(246, 246, 246, 0.18);
-  --border-focus: var(--color-primary);
+  --sunset-orange: #ff6b35;
+  --sunset-orange-hover: #fa5719;
+  --sunset-orange-subtle: rgba(255, 107, 53, 0.15);
+  --sunset-orange-glow: 0 0 16px rgba(255, 107, 53, 0.4);
+
+  --pure-white: #ffffff;
+  --white-subtle: #f8fafc;
+  --white-muted: #94a3b8;
+  --white-faint: #64748b;
+
+  /* Surfaces & Backgrounds: Deep oceanic dark canvas */
+  --bg: #090e17;
+  --bg-subtle: #0f172a;
+  --surface: #142036;
+  --surface-hover: #1c2b48;
+  --card: #131d31;
+  --card-hover: #192742;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.18);
+  --border-focus: var(--ocean-blue);
 
   /* Typography */
-  --text: var(--color-neutral);
-  --text-secondary: #9ea3be;
-  --text-muted: #6b708d;
+  --text: var(--pure-white);
+  --text-secondary: var(--white-muted);
+  --text-muted: var(--white-faint);
 
-  /* Main 1: Royal Blue Brand */
-  --accent: var(--color-primary);
-  --accent-hover: #3d47c4;
-  --accent-gradient: linear-gradient(135deg, #4D59E3 0%, #6873f5 100%);
-  --accent-subtle: rgba(77, 89, 227, 0.14);
-  --accent-glow: 0 0 16px rgba(77, 89, 227, 0.35);
+  /* Primary Brand: Ocean Blue */
+  --accent: var(--ocean-blue);
+  --accent-hover: var(--ocean-blue-hover);
+  --accent-gradient: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+  --accent-subtle: var(--ocean-blue-subtle);
+  --accent-glow: var(--ocean-blue-glow);
 
-  /* Highlighting Things: Volt Lime */
-  --highlight: var(--color-highlight);
-  --highlight-subtle: rgba(198, 227, 84, 0.14);
-  --highlight-glow: 0 0 14px rgba(198, 227, 84, 0.35);
+  /* Highlighting Things: Sunset Orange */
+  --highlight: var(--sunset-orange);
+  --highlight-subtle: var(--sunset-orange-subtle);
+  --highlight-glow: var(--sunset-orange-glow);
 
-  /* Rare Things: Vibrant Coral / Crimson */
-  --rare: var(--color-rare);
-  --rare-subtle: rgba(237, 64, 89, 0.14);
-  --rare-glow: 0 0 14px rgba(237, 64, 89, 0.35);
-
-  --danger: var(--color-rare);
-  --danger-subtle: rgba(237, 64, 89, 0.14);
+  --danger: #ef4444;
+  --danger-subtle: rgba(239, 68, 68, 0.14);
   --warning: #f59e0b;
   --warning-subtle: rgba(245, 158, 11, 0.12);
-  --success: var(--color-highlight);
-  --success-subtle: rgba(198, 227, 84, 0.14);
+  --success: var(--ocean-blue-light);
+  --success-subtle: rgba(56, 189, 248, 0.14);
 
-  --muted: rgba(246, 246, 246, 0.04);
-  --muted-hover: rgba(246, 246, 246, 0.08);
+  --muted: rgba(255, 255, 255, 0.04);
+  --muted-hover: rgba(255, 255, 255, 0.08);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.7);
   --radius-sm: 6px;
-  --radius: 10px;
-  --radius-lg: 14px;
+  --radius: 12px;
+  --radius-lg: 16px;
 }
 
 /* Light Theme Override */
 :root[data-theme="light"] {
-  --bg: #f8f9fa;
-  --bg-subtle: #f0f2f5;
+  --bg: #f8fafc;
+  --bg-subtle: #f1f5f9;
   --surface: #ffffff;
-  --surface-hover: #f4f5f8;
+  --surface-hover: #f8fafc;
   --card: #ffffff;
-  --card-hover: #f8f9fc;
-  --border: #e2e4ea;
-  --border-hover: #d0d3de;
-  --border-focus: var(--color-primary);
+  --card-hover: #f8fafc;
+  --border: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --border-focus: var(--ocean-blue);
 
-  --text: #10121a;
-  --text-secondary: #585c72;
-  --text-muted: #8b90a6;
+  --text: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
 
-  --accent: var(--color-primary);
-  --accent-hover: #3d47c4;
-  --accent-gradient: linear-gradient(135deg, #4D59E3 0%, #6873f5 100%);
-  --accent-subtle: rgba(77, 89, 227, 0.09);
-  --accent-glow: 0 0 12px rgba(77, 89, 227, 0.2);
+  --accent: var(--ocean-blue);
+  --accent-hover: var(--ocean-blue-hover);
+  --accent-subtle: rgba(2, 132, 199, 0.1);
+  --accent-glow: 0 0 12px rgba(2, 132, 199, 0.2);
 
-  --highlight: #7ea308;
-  --highlight-subtle: rgba(198, 227, 84, 0.25);
+  --highlight: var(--sunset-orange);
+  --highlight-subtle: rgba(255, 107, 53, 0.15);
 
-  --rare: var(--color-rare);
-  --rare-subtle: rgba(237, 64, 89, 0.12);
-
-  --muted: #f0f2f5;
-  --muted-hover: #e4e6ee;
+  --muted: #f1f5f9;
+  --muted-hover: #e2e8f0;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 ::selection {
-  background: rgba(198, 227, 84, 0.35);
-  color: var(--color-neutral);
+  background: rgba(255, 107, 53, 0.35);
+  color: #ffffff;
 }
 
 /* Reset & Base Typography */
@@ -199,15 +200,15 @@ input:focus, select:focus, textarea:focus {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 8px var(--accent);
+  background: var(--sunset-orange);
+  box-shadow: 0 0 10px var(--sunset-orange);
 }
 
 /* Nav Tabs — Segmented Floating Bar */
 .nav-tabs {
   display: flex;
-  gap: 4px;
-  padding: 6px 12px;
+  gap: 6px;
+  padding: 8px 12px;
   background: var(--bg-subtle);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
@@ -215,28 +216,30 @@ input:focus, select:focus, textarea:focus {
 }
 
 .tab {
-  padding: 6px 12px;
+  padding: 6px 14px;
   font-size: 12px;
   font-weight: 500;
   color: var(--text-secondary);
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   white-space: nowrap;
   display: flex;
   align-items: center;
   gap: 6px;
   transition: all 0.15s ease;
+  border: 1px solid transparent;
 }
 
 .tab:hover {
   color: var(--text);
-  background: var(--muted);
+  background: var(--muted-hover);
 }
 
 .tab.active {
   color: #ffffff;
-  background: var(--card);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
+  background: var(--ocean-blue);
+  border-color: transparent;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
 }
 :root[data-theme="light"] .tab.active {
   color: #09090b;
@@ -347,26 +350,162 @@ input:focus, select:focus, textarea:focus {
   letter-spacing: 0.05em;
   padding: 2px 7px;
   border-radius: 4px;
-  background: var(--accent-subtle);
-  color: var(--accent);
-  border: 1px solid rgba(77, 89, 227, 0.3);
+  background: var(--ocean-blue-subtle);
+  color: var(--ocean-blue-light);
+  border: 1px solid rgba(2, 132, 199, 0.25);
   flex-shrink: 0;
 }
 
-.badge-highlight,
-.card-type-badge.badge-text,
-.card-type-badge.badge-highlight {
-  background: var(--highlight-subtle);
-  color: var(--highlight);
-  border-color: rgba(198, 227, 84, 0.35);
+.badge-text,
+.badge-highlight {
+  background: var(--sunset-orange-subtle);
+  color: var(--sunset-orange);
+  border-color: rgba(255, 107, 53, 0.3);
 }
 
-.badge-rare,
-.card-type-badge.badge-question,
-.card-type-badge.badge-danger {
-  background: var(--rare-subtle);
-  color: var(--rare);
-  border-color: rgba(237, 64, 89, 0.35);
+.badge-note,
+.badge-link,
+.badge-code,
+.badge-screenshot {
+  background: var(--ocean-blue-subtle);
+  color: var(--ocean-blue-light);
+  border-color: rgba(2, 132, 199, 0.25);
+}
+
+.badge-question {
+  background: rgba(255, 107, 53, 0.16);
+  color: #ff8c5a;
+  border-color: rgba(255, 107, 53, 0.35);
+}
+
+/* Modern Inline Composer (replaces browser prompt) */
+.composer-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.composer-card:focus-within {
+  border-color: var(--ocean-blue);
+  box-shadow: 0 0 0 1px var(--ocean-blue), 0 4px 16px rgba(0,0,0,0.3);
+}
+
+.composer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.composer-modes {
+  display: flex;
+  gap: 4px;
+  background: var(--bg);
+  padding: 2px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.mode-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mode-pill:hover {
+  color: var(--text);
+}
+
+.mode-pill.active {
+  background: var(--ocean-blue);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.mode-pill.active.orange {
+  background: var(--sunset-orange);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.composer-quick-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pill-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pill-action:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  color: var(--text);
+}
+
+.pill-action.recording {
+  background: var(--sunset-orange);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.composer-textarea {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 12.5px;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 48px;
+  padding: 4px 0;
+  outline: none;
+}
+
+.composer-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.composer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.composer-hint {
+  font-size: 10.5px;
+  color: var(--text-muted);
 }
 
 .card-content {

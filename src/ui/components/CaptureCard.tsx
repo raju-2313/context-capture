@@ -84,12 +84,12 @@ export function CaptureCard({
 
   const typeLabel = currentCapture.type.charAt(0).toUpperCase() + currentCapture.type.slice(1);
   const typeColors: Record<string, string> = {
-    text: "var(--color-highlight, #C6E354)",       // Highlighting Volt
-    note: "var(--color-primary, #4D59E3)",         // Main Blurple
-    code: "var(--color-primary, #4D59E3)",         // Main Blurple
-    link: "var(--color-primary, #4D59E3)",         // Main Blurple
-    question: "var(--color-rare, #ED4059)",        // Rare Coral/Crimson
-    screenshot: "var(--color-rare, #ED4059)",      // Rare Coral/Crimson
+    text: "var(--sunset-orange)",
+    note: "var(--ocean-blue)",
+    code: "var(--ocean-blue)",
+    link: "var(--ocean-blue)",
+    question: "var(--sunset-orange)",
+    screenshot: "var(--ocean-blue)",
   };
 
   const tags: string[] = currentCapture.tags || [];
@@ -131,7 +131,6 @@ export function CaptureCard({
     <div
       class="card"
       style={{
-        borderLeft: `3px solid ${typeColors[currentCapture.type] || "#86868b"}`,
         opacity: showDeleteToast ? 0.4 : 1,
         transition: "opacity 0.2s",
       }}
@@ -165,7 +164,7 @@ export function CaptureCard({
           {currentCapture.duplicate_warning && (
             <span
               style={{
-                color: "var(--color-rare, #ED4059)",
+                color: "var(--sunset-orange)",
                 fontSize: 11,
                 fontWeight: 600,
                 display: "inline-flex",
@@ -174,10 +173,10 @@ export function CaptureCard({
               }}
               title="A capture with this URL already exists in your library"
             >
-              <DuplicateIcon size={12} color="var(--color-rare, #ED4059)" /> Duplicate URL
+              <DuplicateIcon size={12} color="var(--sunset-orange)" /> Duplicate URL
             </span>
           )}
-          {addedMsg && <span style={{ color: "var(--color-highlight, #C6E354)", fontWeight: 600 }}>{addedMsg}</span>}
+          {addedMsg && <span style={{ color: "var(--ocean-blue-light)", fontWeight: 600 }}>{addedMsg}</span>}
         </div>
         {currentCapture.content_text && <div class="card-text">{currentCapture.content_text}</div>}
         {currentCapture.code_language && (
@@ -311,7 +310,7 @@ export function CaptureCard({
             title="Delete"
             aria-label="Delete capture"
           >
-            <TrashIcon size={14} color="var(--color-rare, #ED4059)" />
+            <TrashIcon size={14} color="var(--sunset-orange)" />
           </button>
         </div>
       </div>

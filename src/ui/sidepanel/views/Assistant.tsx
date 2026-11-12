@@ -98,9 +98,9 @@ export default function AssistantView({ onViewDetail, initialQuery }: AssistantV
           border: "1px solid var(--border)",
         }}
       >
-        <LockIcon size={14} color="var(--color-primary, #4D59E3)" />
+        <LockIcon size={14} color="var(--ocean-blue-light)" />
         <span>
-          <strong style={{ color: "var(--color-neutral, #F6F6F6)" }}>Grounded AI</strong> — Answers cite only your saved captures. Zero external telemetry.
+          <strong style={{ color: "#ffffff" }}>Grounded AI</strong> — Answers cite only your saved captures. Zero external telemetry.
         </span>
       </div>
 
@@ -175,7 +175,7 @@ export default function AssistantView({ onViewDetail, initialQuery }: AssistantV
             handleAsk("What are the key points?");
           }}
         >
-          <LightbulbIcon size={12} color="var(--color-highlight, #C6E354)" /> Key points?
+          <LightbulbIcon size={12} color="var(--sunset-orange)" /> Key points?
         </button>
         <button
           class="btn"
@@ -185,7 +185,7 @@ export default function AssistantView({ onViewDetail, initialQuery }: AssistantV
             handleAsk("What questions did I capture?");
           }}
         >
-          <QuestionIcon size={12} color="var(--color-rare, #ED4059)" /> My questions
+          <QuestionIcon size={12} color="var(--sunset-orange)" /> My questions
         </button>
         {scope !== "all" && (
           <button
@@ -194,7 +194,7 @@ export default function AssistantView({ onViewDetail, initialQuery }: AssistantV
             onClick={handleSummarize}
             disabled={loading}
           >
-            <NoteIcon size={12} color="var(--color-primary, #4D59E3)" /> Summarize Scope
+            <NoteIcon size={12} color="var(--ocean-blue-light)" /> Summarize Scope
           </button>
         )}
       </div>
