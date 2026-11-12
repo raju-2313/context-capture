@@ -148,3 +148,4 @@ describe("Phase 2A: Projects Layer", () => {
     expect(originalCapture).not.toBeNull();
   });
 });
+
