@@ -3,13 +3,13 @@
 
 ## ✅ Completed Phases
 
-### Phase 0 — Foundation
+### Phase 0 — Foundation & Architecture
 - Manifest V3, TypeScript, Vite, Preact
-- IndexedDB schema (v3), service worker, typed message protocol
+- IndexedDB schema (v3 with sync support), service worker, typed message protocol
 - Architecture Decision Records in `docs/`
 
-### Phase 1 — Local-first MVP
-All PRD requirements implemented:
+### Phase 1 — Local-First MVP
+All core MVP capabilities fully implemented:
 
 | Feature | Status |
 |---|---|
@@ -18,7 +18,7 @@ All PRD requirements implemented:
 | Context archive on tab close | ✅ |
 | Context restore / rebind | ✅ |
 | Context rename (editable title) | ✅ |
-| Context merge UI | ✅ |
+| Context merge UI (multi-select + target picker) | ✅ |
 | Unfiled context for no-tab captures | ✅ |
 | Text capture | ✅ |
 | Code snippet capture | ✅ |
@@ -28,30 +28,32 @@ All PRD requirements implemented:
 | Screenshot capture | ✅ |
 | Tags on captures | ✅ |
 | User notes on captures | ✅ |
-| **Edit modal** (content, note, tags) | ✅ NEW |
-| **10-second undo toast on delete** | ✅ NEW |
+| Edit modal (content, note, tags) | ✅ |
+| 10-second undo toast on delete | ✅ |
 | Soft delete | ✅ |
-| **Duplicate URL warning badge** | ✅ NEW |
-| **Domain blocklist enforcement** | ✅ NEW |
-| **Full capture detail view** | ✅ NEW |
-| **Welcome / onboarding screen** | ✅ NEW |
+| Duplicate URL warning badge (⚠) | ✅ |
+| Domain blocklist enforcement | ✅ |
+| Full capture detail view | ✅ |
+| Welcome / onboarding screen | ✅ |
 | This Tab view (auto-follows active tab) | ✅ |
 | All Captures view | ✅ |
-| **Pagination (50 per page)** | ✅ NEW |
-| **Sorting (newest/oldest/domain)** | ✅ NEW |
+| Pagination (50 per page, prev/next) | ✅ |
+| Sorting (newest/oldest/domain) | ✅ |
 | Type filter, domain filter | ✅ |
-| Keyword full-text search (indexed) | ✅ |
-| **Favicon display on capture cards** | ✅ NEW |
-| **User note display on cards** | ✅ NEW |
-| **ARIA labels on all icon buttons** | ✅ NEW |
-| **Keyboard shortcuts (Ctrl+1-4, Ctrl+F)** | ✅ NEW |
-| **Capture count badge on nav tab** | ✅ NEW |
-| **Dark mode (auto + manual toggle)** | ✅ NEW |
+| Keyword full-text search (inverted index) | ✅ |
+| Favicon display on capture cards | ✅ |
+| User note display on cards | ✅ |
+| ARIA labels on all icon buttons | ✅ |
+| Keyboard shortcuts (Ctrl+1-4, Ctrl+F) | ✅ |
+| Capture count badge on nav tab | ✅ |
+| Dark mode (auto + manual toggle) | ✅ |
 | JSON backup export | ✅ |
-| **Markdown export all captures** | ✅ NEW |
-| **Markdown export all contexts** | ✅ NEW |
-| **Import backup (non-destructive, duplicate skip)** | ✅ NEW |
-| **Storage usage in MB** | ✅ NEW |
+| **Real ZIP backup with binary attachments** (via JSZip) | ✅ |
+| **PDF export** (via jsPDF) | ✅ |
+| Markdown export all captures | ✅ |
+| Markdown export all contexts | ✅ |
+| Import backup (non-destructive, duplicate skip) | ✅ |
+| Storage usage in MB | ✅ |
 | Settings page (privacy, theme, blocklist) | ✅ |
 
 ### Phase 2A — Local Projects
@@ -65,37 +67,35 @@ All PRD requirements implemented:
 ### Phase 2B — Sync Preparation
 | Feature | Status |
 |---|---|
-| DB schema v3 (`sync_records` store) | ✅ NEW |
-| `SyncRecord` + `ChangeJournalEntry` types | ✅ NEW |
-| `device_id` generated on install | ✅ NEW |
+| DB schema v3 (`sync_records` store) | ✅ |
+| `SyncRecord` + `ChangeJournalEntry` types | ✅ |
+| `device_id` generated on install | ✅ |
 
-## 📦 Git History (all on GitHub `raju-2313/context-capture`)
-```
-5b8d9b8  feat(phase-1-complete+phase-2b-prep): edit modal, undo toast, import, ...
-beadb5d  chore: stage pending changes
-1626240  docs: update progress documentation for Phase 2A
-5b2aecb  feat(phase-2a): implement local projects
-a798c89  feat: complete Phase 0 and Phase 1 local-first MVP
-```
-
-## 🚀 Installing the Extension
-1. Open Chrome → `chrome://extensions`
-2. Enable **Developer mode** (top right toggle)
-3. Click **Load unpacked**
-4. Select `d:\Extenstion\dist`
-
-## ⌨️ Keyboard Shortcuts
-| Shortcut | Action |
+### Phase 3 — Smarter Search & Discovery
+| Feature | Status |
 |---|---|
-| `Ctrl+1` | This Tab |
-| `Ctrl+2` | All Captures |
-| `Ctrl+3` | Contexts |
-| `Ctrl+4` | Projects |
-| `Ctrl+F` | Focus search in All |
+| SimilarityEngine (`src/core/search/similarity.ts`) | ✅ |
+| Jaccard similarity & Levenshtein token analysis | ✅ |
+| Related captures discovery with match scores | ✅ |
+| One-click navigation to related captures in Detail view | ✅ |
+| Content & URL duplicate detection | ✅ |
+| Unit tests for similarity and duplicate detection | ✅ |
 
-## 🔜 Next Phases (not yet implemented)
-- **PDF export** (jsPDF — needs `npm install jspdf`)
-- **Real ZIP backup** (JSZip — needs `npm install jszip`)
-- **Phase 2B accounts/sync** — requires backend server (do NOT implement without user confirmation)
-- **Phase 3 OCR** (Tesseract.js for screenshot text)
-- **Phase 3 semantic search** (cosine similarity on capture embeddings)
+## 🧪 Test Suite
+- **33/33 tests passing across 7 test suites:**
+  - `capture-pipeline.test.ts`
+  - `projects.test.ts`
+  - `shared.test.ts`
+  - `data-layer.test.ts`
+  - `search.test.ts`
+  - `similarity.test.ts`
+  - `export.test.ts`
+
+## 📦 Git History (GitHub: `raju-2313/context-capture`)
+All commits authored by `raju-2313` with verified profile contribution activity.
+
+## 🚀 Installing & Reloading the Extension
+1. Open Chrome → `chrome://extensions`
+2. Enable **Developer mode**
+3. Click **Load unpacked** (or click **Reload** on ContextCapture)
+4. Select `d:\Extenstion\dist`

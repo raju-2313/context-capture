@@ -1,20 +1,28 @@
 import { useState, useEffect } from "preact/hooks";
 import { captures as capRepo, attachments as attRepo, contexts as ctxRepo } from "../../../data/repositories";
 import { Capture, ContextRecord } from "../../../shared/types";
+import { similarityEngine, RelatedCaptureResult } from "../../../core/search/similarity";
 
 interface CaptureDetailProps {
   captureId: string;
   onBack?: () => void;
+  onSelectCapture?: (captureId: string) => void;
 }
 
-export default function CaptureDetail({ captureId, onBack }: CaptureDetailProps) {
+export default function CaptureDetail({ captureId: initialCaptureId, onBack, onSelectCapture }: CaptureDetailProps) {
+  const [activeCaptureId, setActiveCaptureId] = useState<string>(initialCaptureId);
   const [capture, setCapture] = useState<Capture | null>(null);
   const [context, setContext] = useState<ContextRecord | null>(null);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
   const [userNote, setUserNote] = useState<string>("");
   const [savingNote, setSavingNote] = useState<boolean>(false);
   const [noteSavedMsg, setNoteSavedMsg] = useState<string>("");
+  const [related, setRelated] = useState<RelatedCaptureResult[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setActiveCaptureId(initialCaptureId);
+  }, [initialCaptureId]);
 
   useEffect(() => {
     loadCapture();
@@ -23,12 +31,12 @@ export default function CaptureDetail({ captureId, onBack }: CaptureDetailProps)
         URL.revokeObjectURL(screenshotUrl);
       }
     };
-  }, [captureId]);
+  }, [activeCaptureId]);
 
   async function loadCapture() {
     setLoading(true);
     try {
-      const cap = await capRepo.get(captureId);
+      const cap = await capRepo.get(activeCaptureId);
       if (!cap) {
         setLoading(false);
         return;
@@ -48,6 +56,9 @@ export default function CaptureDetail({ captureId, onBack }: CaptureDetailProps)
           setScreenshotUrl(url);
         }
       }
+
+      // Find related captures
+      similarityEngine.findRelated(activeCaptureId, 4).then(setRelated).catch(() => {});
     } catch (e) {
       console.error("Failed to load capture detail", e);
     } finally {
@@ -198,6 +209,50 @@ export default function CaptureDetail({ captureId, onBack }: CaptureDetailProps)
           </div>
         )}
       </div>
+
+      {related.length > 0 && (
+        <div class="settings-section" style={{ marginTop: 16 }}>
+          <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-secondary)", marginBottom: 8 }}>
+            🔗 Related Captures ({related.length})
+          </h4>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {related.map(({ capture: rel, score, commonTerms }) => (
+              <div
+                key={rel.capture_id}
+                class="card"
+                style={{
+                  cursor: "pointer",
+                  margin: 0,
+                  padding: 10,
+                  transition: "border-color 0.15s",
+                }}
+                onClick={() => {
+                  if (onSelectCapture) onSelectCapture(rel.capture_id);
+                  else setActiveCaptureId(rel.capture_id);
+                }}
+                title="Click to view this related capture"
+              >
+                <div class="card-content">
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span class="card-type-badge">{rel.type}</span>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)" }}>
+                      {Math.round(score * 100)}% match
+                    </span>
+                  </div>
+                  <div class="card-title" style={{ marginTop: 4 }}>
+                    {rel.source_title || rel.content_text?.slice(0, 60) || "Untitled"}
+                  </div>
+                  {commonTerms.length > 0 && (
+                    <div style={{ fontSize: 10, color: "var(--text-secondary)", marginTop: 2 }}>
+                      Shared: {commonTerms.join(", ")}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

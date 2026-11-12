@@ -7,10 +7,12 @@ export function CaptureCard({
   capture,
   onDelete,
   onEdit,
+  onViewDetail,
 }: {
   capture: any;
   onDelete?: () => void;
   onEdit?: () => void;
+  onViewDetail?: (captureId: string) => void;
 }) {
   const [currentCapture, setCurrentCapture] = useState(capture);
   const [showProjectPicker, setShowProjectPicker] = useState(false);
@@ -162,6 +164,16 @@ export function CaptureCard({
         )}
 
         <div class="card-actions">
+          {onViewDetail && (
+            <button
+              class="btn-icon"
+              onClick={() => onViewDetail(currentCapture.capture_id)}
+              title="View details & related captures"
+              aria-label="View capture details"
+            >
+              🔍
+            </button>
+          )}
           <button class="btn-icon" onClick={openPicker} title="Add to Project" aria-label="Add to Project">
             + Project
           </button>

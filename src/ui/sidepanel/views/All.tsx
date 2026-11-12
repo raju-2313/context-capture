@@ -8,7 +8,7 @@ type SortOrder = "newest" | "oldest" | "domain";
 
 const PAGE_SIZE = 50;
 
-export default function AllCaptures() {
+export default function AllCaptures({ onViewDetail }: { onViewDetail?: (id: string) => void } = {}) {
   const [captures, setCaptures] = useState<any[]>([]);
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState({ type: "", domain: "" });
@@ -143,6 +143,7 @@ export default function AllCaptures() {
               key={cap.capture_id}
               capture={cap}
               onDelete={() => handleDelete(cap.capture_id)}
+              onViewDetail={onViewDetail}
             />
           ))
         )}

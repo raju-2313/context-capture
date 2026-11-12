@@ -4,7 +4,7 @@ import { contextLifecycle } from "../../../core/context/lifecycle";
 import { captures as capRepo, contexts as ctxRepo } from "../../../data/repositories";
 import { CaptureCard } from "../../components/CaptureCard";
 
-export default function ThisTab() {
+export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) => void } = {}) {
   const [contextId, setContextId] = useState<string | null>(null);
   const [contextTitle, setContextTitle] = useState("New Context");
   const [captures, setCaptures] = useState<any[]>([]);
@@ -167,6 +167,7 @@ export default function ThisTab() {
               key={cap.capture_id}
               capture={cap}
               onDelete={() => deleteCapture(cap.capture_id)}
+              onViewDetail={onViewDetail}
             />
           ))
         )}

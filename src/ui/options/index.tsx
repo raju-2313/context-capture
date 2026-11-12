@@ -250,10 +250,46 @@ export default function Settings() {
             <button
               class="btn btn-primary"
               style={{ width: "100%" }}
+              onClick={async () => {
+                setExporting("zip");
+                try {
+                  const blob = await exportEngine.exportBackupZip();
+                  await downloadBlob(blob, `contextcapture-full-backup-${new Date().toISOString().slice(0, 10)}.zip`);
+                } finally {
+                  setExporting(null);
+                }
+              }}
+              disabled={exporting === "zip"}
+            >
+              {exporting === "zip" ? "Exporting ZIP..." : "🗜️ Export Complete ZIP Backup (with Attachments)"}
+            </button>
+
+            <button
+              class="btn"
+              style={{ width: "100%" }}
               onClick={handleExportJSON}
               disabled={exporting === "json"}
             >
               {exporting === "json" ? "Exporting..." : "📦 Export JSON Backup"}
+            </button>
+
+            <button
+              class="btn"
+              style={{ width: "100%" }}
+              onClick={async () => {
+                setExporting("pdf");
+                try {
+                  const all = await capRepo.listAll({ limit: 10000 });
+                  const ids = all.map((c: any) => c.capture_id);
+                  const blob = await exportEngine.exportPdf(ids);
+                  await downloadBlob(blob, `contextcapture-${new Date().toISOString().slice(0, 10)}.pdf`);
+                } finally {
+                  setExporting(null);
+                }
+              }}
+              disabled={exporting === "pdf"}
+            >
+              {exporting === "pdf" ? "Generating PDF..." : "📄 Export All as PDF"}
             </button>
 
             <button
