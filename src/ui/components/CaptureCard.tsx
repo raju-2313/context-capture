@@ -2,6 +2,8 @@ import { useState, useRef } from "preact/hooks";
 import { projects as projRepo, captures as capRepo } from "../../data/repositories";
 import { CaptureEditModal } from "./CaptureEditModal";
 import { Toast } from "./Toast";
+import { clipboardIntegration } from "../../core/integrations/clipboard";
+import { webhookIntegration } from "../../core/integrations/webhook";
 
 export function CaptureCard({
   capture,
@@ -164,6 +166,31 @@ export function CaptureCard({
         )}
 
         <div class="card-actions">
+          <button
+            class="btn-icon"
+            onClick={async () => {
+              const ok = await clipboardIntegration.copyFormatted(currentCapture);
+              setAddedMsg(ok ? "Copied!" : "Copy failed");
+              setTimeout(() => setAddedMsg(""), 2000);
+            }}
+            title="Copy formatted note to clipboard"
+            aria-label="Copy capture to clipboard"
+          >
+            📋
+          </button>
+          <button
+            class="btn-icon"
+            onClick={async () => {
+              setAddedMsg("Sending...");
+              const res = await webhookIntegration.sendCapture(currentCapture);
+              setAddedMsg(res.success ? "Sent to Webhook!" : (res.error || "Webhook failed"));
+              setTimeout(() => setAddedMsg(""), 2500);
+            }}
+            title="Send to Webhook (Notion / Zapier / Readwise)"
+            aria-label="Send capture to webhook"
+          >
+            📤
+          </button>
           {onViewDetail && (
             <button
               class="btn-icon"

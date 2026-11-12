@@ -3,12 +3,18 @@ import { capturePipeline } from "../../../core/capture/pipeline";
 import { contextLifecycle } from "../../../core/context/lifecycle";
 import { captures as capRepo, contexts as ctxRepo } from "../../../data/repositories";
 import { CaptureCard } from "../../components/CaptureCard";
+import { voiceNoteIntegration, VoiceRecordingState } from "../../../core/integrations/voice";
 
 export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) => void } = {}) {
   const [contextId, setContextId] = useState<string | null>(null);
   const [contextTitle, setContextTitle] = useState("New Context");
   const [captures, setCaptures] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [voiceState, setVoiceState] = useState<VoiceRecordingState>({
+    isRecording: false,
+    transcript: "",
+    interimTranscript: "",
+  });
 
   useEffect(() => {
     load();
@@ -136,7 +142,50 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
             await load();
           }
         }}>Bookmark Page</button>
+        <button
+          class="btn"
+          style={{ background: voiceState.isRecording ? "var(--danger)" : "var(--muted)", color: voiceState.isRecording ? "#fff" : "inherit" }}
+          onClick={async () => {
+            if (voiceState.isRecording) {
+              voiceNoteIntegration.stopRecording();
+            } else {
+              const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+              voiceNoteIntegration.startRecording(
+                (state) => setVoiceState(state),
+                async (finalText) => {
+                  if (finalText) {
+                    await voiceNoteIntegration.saveVoiceCapture(finalText, tab?.id ?? null, tab?.windowId ?? null);
+                    await load();
+                  }
+                }
+              );
+            }
+          }}
+          title="Record a voice note"
+        >
+          {voiceState.isRecording ? "⏹ Stop" : "🎤 Voice"}
+        </button>
       </div>
+
+      {voiceState.isRecording && (
+        <div
+          style={{
+            padding: "8px 12px",
+            background: "#ff3b3015",
+            border: "1px solid var(--danger)",
+            borderRadius: 8,
+            marginBottom: 10,
+            fontSize: 12,
+          }}
+        >
+          <div style={{ fontWeight: 600, color: "var(--danger)", display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ animation: "pulse 1s infinite" }}>🔴</span> Recording Voice Note...
+          </div>
+          <div style={{ marginTop: 4, fontStyle: "italic", color: "var(--text)" }}>
+            {voiceState.transcript} <span style={{ color: "var(--text-secondary)" }}>{voiceState.interimTranscript}</span>
+          </div>
+        </div>
+      )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {captures.length === 0 ? (

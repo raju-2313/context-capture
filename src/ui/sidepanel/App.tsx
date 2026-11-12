@@ -6,8 +6,9 @@ import All from "./views/All";
 import Contexts from "./views/Contexts";
 import ProjectsView from "./views/Projects";
 import CaptureDetail from "./views/Detail";
+import AssistantView from "./views/Assistant";
 
-type Tab = "thistab" | "all" | "contexts" | "projects" | "settings";
+type Tab = "thistab" | "all" | "contexts" | "projects" | "assistant" | "settings";
 
 export default function SidePanelApp() {
   const [activeTab, setActiveTab] = useState<Tab>("thistab");
@@ -27,13 +28,15 @@ export default function SidePanelApp() {
     // Keyboard shortcuts
     function handleKeydown(e: KeyboardEvent) {
       if (e.ctrlKey || e.metaKey) {
-        if (e.key === "1") { e.preventDefault(); setActiveTab("thistab"); }
-        else if (e.key === "2") { e.preventDefault(); setActiveTab("all"); }
-        else if (e.key === "3") { e.preventDefault(); setActiveTab("contexts"); }
-        else if (e.key === "4") { e.preventDefault(); setActiveTab("projects"); }
+        if (e.key === "1") { e.preventDefault(); setActiveTab("thistab"); setDetailCaptureId(null); }
+        else if (e.key === "2") { e.preventDefault(); setActiveTab("all"); setDetailCaptureId(null); }
+        else if (e.key === "3") { e.preventDefault(); setActiveTab("contexts"); setDetailCaptureId(null); }
+        else if (e.key === "4") { e.preventDefault(); setActiveTab("projects"); setDetailCaptureId(null); }
+        else if (e.key === "5") { e.preventDefault(); setActiveTab("assistant"); setDetailCaptureId(null); }
         else if (e.key === "f" || e.key === "F") {
           e.preventDefault();
           setActiveTab("all");
+          setDetailCaptureId(null);
           setTimeout(() => (window as any).__focusAllSearch?.(), 50);
         }
       }
@@ -107,6 +110,15 @@ export default function SidePanelApp() {
           Projects
         </button>
         <button
+          class={`tab ${activeTab === "assistant" && !detailCaptureId ? "active" : ""}`}
+          role="tab"
+          aria-selected={activeTab === "assistant"}
+          onClick={() => { setActiveTab("assistant"); setDetailCaptureId(null); }}
+          title="Ctrl+5"
+        >
+          🤖 AI
+        </button>
+        <button
           class={`tab ${activeTab === "settings" && !detailCaptureId ? "active" : ""}`}
           role="tab"
           aria-selected={activeTab === "settings"}
@@ -128,6 +140,7 @@ export default function SidePanelApp() {
             {activeTab === "all" && <All onViewDetail={(id) => setDetailCaptureId(id)} />}
             {activeTab === "contexts" && <Contexts />}
             {activeTab === "projects" && <ProjectsView />}
+            {activeTab === "assistant" && <AssistantView onViewDetail={(id) => setDetailCaptureId(id)} />}
             {activeTab === "settings" && (
               <div class="empty-state" style={{ height: "auto", padding: 20 }}>
                 <h3>Settings</h3>

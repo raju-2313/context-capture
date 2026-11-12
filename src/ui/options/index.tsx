@@ -3,6 +3,7 @@ import { render } from "preact/compat";
 import { settingsStore } from "../../data/settings";
 import { captures as capRepo, contexts as ctxRepo, attachments as attRepo } from "../../data/repositories";
 import { exportEngine } from "../../core/export";
+import { obsidianIntegration } from "../../core/integrations/obsidian";
 
 type ImportStatus = { phase: "idle" | "running" | "done" | "error"; message: string };
 
@@ -309,6 +310,60 @@ export default function Settings() {
             >
               {exporting === "md-ctx" ? "Exporting..." : "📂 Export All Contexts as Markdown"}
             </button>
+
+            <button
+              class="btn"
+              style={{ width: "100%", background: "#705dcf20", color: "#705dcf", border: "1px solid #705dcf" }}
+              onClick={async () => {
+                setExporting("obsidian");
+                try {
+                  const blob = await obsidianIntegration.exportVaultZip();
+                  await downloadBlob(blob, `ContextCapture-Obsidian-Vault-${new Date().toISOString().slice(0, 10)}.zip`);
+                } finally {
+                  setExporting(null);
+                }
+              }}
+              disabled={exporting === "obsidian"}
+            >
+              {exporting === "obsidian" ? "Exporting Vault..." : "💎 Export Obsidian Vault (with Wikilinks & Frontmatter)"}
+            </button>
+          </div>
+        </div>
+
+        {/* Phase 5: External Integrations */}
+        <div class="settings-section">
+          <h4>Integrations (Webhooks &amp; Note Apps)</h4>
+          <div class="setting-row" style={{ flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+            <span>Webhook URL (Notion / Zapier / Readwise / Make)</span>
+            <input
+              class="input"
+              value={settings["webhook_url"] || ""}
+              onBlur={(e) => saveSetting("webhook_url", e.currentTarget.value)}
+              placeholder="https://your-webhook-endpoint.com/api"
+              style={{ width: "100%" }}
+            />
+            <div style={{ fontSize: 11, color: "#86868b" }}>
+              Captures can be dispatched to this webhook using the 📤 button on any capture card.
+            </div>
+          </div>
+        </div>
+
+        {/* Phase 4: Grounded AI Assistant Settings */}
+        <div class="settings-section">
+          <h4>AI Knowledge Assistant</h4>
+          <div class="setting-row">
+            <span>Enable Grounded AI Q&amp;A</span>
+            <label class="toggle">
+              <input
+                type="checkbox"
+                checked={settings["ai_assistant_enabled"] !== "false"}
+                onChange={(e) => saveSetting("ai_assistant_enabled", e.currentTarget.checked ? "true" : "false")}
+              />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div style={{ fontSize: 11, color: "#86868b", marginTop: 4 }}>
+            Answers are grounded strictly in your captures and never sent to cloud servers without explicit user request.
           </div>
         </div>
 
