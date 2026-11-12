@@ -116,7 +116,7 @@ export default function CaptureDetail({ captureId: initialCaptureId, onBack, onS
         <h3 style={{ fontSize: 16, fontWeight: 600, flex: 1, margin: 0 }}>
           {capture.source_title || "Capture Detail"}
         </h3>
-        <span class="card-type-badge">{capture.type}</span>
+        <span class={`card-type-badge badge-${capture.type}`}>{capture.type}</span>
       </div>
 
       {screenshotUrl && (
@@ -162,7 +162,7 @@ export default function CaptureDetail({ captureId: initialCaptureId, onBack, onS
           <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", textTransform: "uppercase" }}>
             Personal Note
           </label>
-          {noteSavedMsg && <span style={{ color: "var(--success)", fontSize: 11, fontWeight: 600 }}>{noteSavedMsg}</span>}
+          {noteSavedMsg && <span style={{ color: "var(--color-highlight, #C6E354)", fontSize: 11, fontWeight: 600 }}>{noteSavedMsg}</span>}
         </div>
         <textarea
           class="input"

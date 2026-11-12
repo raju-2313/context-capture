@@ -7,6 +7,7 @@ import Contexts from "./views/Contexts";
 import ProjectsView from "./views/Projects";
 import CaptureDetail from "./views/Detail";
 import AssistantView from "./views/Assistant";
+import { SettingsIcon, SparklesIcon } from "../components/Icons";
 
 type Tab = "thistab" | "all" | "contexts" | "projects" | "assistant" | "settings";
 
@@ -77,7 +78,7 @@ export default function SidePanelApp() {
             aria-label="Open settings page"
             onClick={() => chrome.runtime.openOptionsPage()}
           >
-            &#9881;
+            <SettingsIcon size={16} />
           </button>
         </div>
       </div>
@@ -98,7 +99,22 @@ export default function SidePanelApp() {
           onClick={() => { setActiveTab("all"); setDetailCaptureId(null); }}
           title="Ctrl+2"
         >
-          All {captureCount > 0 && <span style={{ fontSize: 10, background: "var(--muted)", borderRadius: 10, padding: "1px 5px", marginLeft: 3 }}>{captureCount}</span>}
+          All {captureCount > 0 && (
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 600,
+                background: "var(--highlight-subtle)",
+                color: "var(--color-highlight, #C6E354)",
+                border: "1px solid rgba(198, 227, 84, 0.3)",
+                borderRadius: 10,
+                padding: "1px 6px",
+                marginLeft: 4,
+              }}
+            >
+              {captureCount}
+            </span>
+          )}
         </button>
         <button
           class={`tab ${activeTab === "contexts" && !detailCaptureId ? "active" : ""}`}
@@ -124,8 +140,9 @@ export default function SidePanelApp() {
           aria-selected={activeTab === "assistant"}
           onClick={() => { setActiveTab("assistant"); setDetailCaptureId(null); }}
           title="Ctrl+5"
+          style={{ display: "inline-flex", alignItems: "center", gap: 5 }}
         >
-          🤖 AI
+          <SparklesIcon size={13} color={activeTab === "assistant" ? "var(--color-highlight, #C6E354)" : "currentColor"} /> AI
         </button>
         <button
           class={`tab ${activeTab === "settings" && !detailCaptureId ? "active" : ""}`}

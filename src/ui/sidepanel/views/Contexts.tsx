@@ -2,6 +2,7 @@ import { useState, useEffect } from "preact/hooks";
 import { contextLifecycle } from "../../../core/context/lifecycle";
 import { captures as capRepo } from "../../../data/repositories";
 import { exportEngine } from "../../../core/export";
+import { MarkdownIcon, FolderIcon } from "../../components/Icons";
 
 type View = "active" | "archived";
 
@@ -221,8 +222,10 @@ export default function Contexts() {
                     disabled={exportingId === ctx.context_id}
                     title="Export as Markdown"
                     aria-label="Export context as Markdown"
+                    style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
                   >
-                    {exportingId === ctx.context_id ? "Exporting…" : "⬇ Markdown"}
+                    <MarkdownIcon size={12} />
+                    {exportingId === ctx.context_id ? "Exporting…" : "Markdown"}
                   </button>
                 </div>
               </div>

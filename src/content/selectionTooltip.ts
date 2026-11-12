@@ -103,47 +103,47 @@
           background: rgba(13, 14, 20, 0.94);
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
-          border: 1px solid rgba(255, 255, 255, 0.14);
+          border: 1px solid rgba(246, 246, 246, 0.14);
           border-radius: 9999px;
           box-shadow: 0 8px 24px -2px rgba(0, 0, 0, 0.6),
-                      0 0 0 1px rgba(255, 255, 255, 0.05),
+                      0 0 0 1px rgba(246, 246, 246, 0.05),
                       0 2px 6px rgba(0, 0, 0, 0.4);
           cursor: pointer;
           transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-          color: #ffffff;
+          color: #F6F6F6;
         }
 
         .cc-pill:hover {
-          background: rgba(22, 24, 34, 0.98);
-          border-color: rgba(99, 102, 241, 0.5);
+          background: rgba(20, 22, 34, 0.98);
+          border-color: rgba(77, 89, 227, 0.5);
           transform: translateY(-1px);
           box-shadow: 0 12px 28px -2px rgba(0, 0, 0, 0.7),
-                      0 0 16px -2px rgba(99, 102, 241, 0.4);
+                      0 0 16px -2px rgba(77, 89, 227, 0.45);
         }
 
         .cc-pill-icon {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #818cf8;
+          color: #4D59E3;
         }
 
         .cc-pill-label {
           font-size: 12.5px;
           font-weight: 600;
           letter-spacing: -0.01em;
-          color: #ffffff;
+          color: #F6F6F6;
         }
 
         .cc-pill-chevron {
           display: flex;
           align-items: center;
-          color: rgba(255, 255, 255, 0.45);
+          color: rgba(246, 246, 246, 0.45);
           transition: transform 0.15s ease;
         }
 
         .cc-pill:hover .cc-pill-chevron {
-          color: #818cf8;
+          color: #4D59E3;
           transform: translateY(1px);
         }
 
@@ -153,11 +153,11 @@
           background: rgba(12, 13, 18, 0.96);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(246, 246, 246, 0.12);
           border-radius: 14px;
           box-shadow: 0 20px 48px -6px rgba(0, 0, 0, 0.75),
-                      0 0 0 1px rgba(255, 255, 255, 0.05),
-                      0 0 24px -4px rgba(99, 102, 241, 0.15);
+                      0 0 0 1px rgba(246, 246, 246, 0.05),
+                      0 0 24px -4px rgba(77, 89, 227, 0.25);
           overflow: hidden;
           display: flex;
           flex-direction: column;
@@ -168,7 +168,7 @@
           align-items: center;
           justify-content: space-between;
           padding: 10px 14px 8px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          border-bottom: 1px solid rgba(246, 246, 246, 0.06);
         }
 
         .cc-menu-title {
@@ -181,15 +181,15 @@
           width: 7px;
           height: 7px;
           border-radius: 50%;
-          background: #6366f1;
-          box-shadow: 0 0 8px #6366f1;
+          background: #4D59E3;
+          box-shadow: 0 0 8px #4D59E3;
         }
 
         .cc-title-text {
           font-size: 11.5px;
           font-weight: 650;
           letter-spacing: 0.02em;
-          color: #e4e4e7;
+          color: #F6F6F6;
           text-transform: uppercase;
         }
 
@@ -208,16 +208,16 @@
         }
 
         .cc-close-btn:hover {
-          color: #f4f4f5;
-          background: rgba(255, 255, 255, 0.08);
+          color: #ED4059;
+          background: rgba(237, 64, 89, 0.12);
         }
 
         .cc-preview-box {
           padding: 8px 14px;
           background: rgba(0, 0, 0, 0.25);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+          border-bottom: 1px solid rgba(246, 246, 246, 0.04);
           font-size: 11.5px;
-          color: #a1a1aa;
+          color: #9ea3be;
           font-style: italic;
           white-space: nowrap;
           overflow: hidden;
@@ -240,25 +240,25 @@
           background: transparent;
           border: none;
           border-radius: 8px;
-          color: #f4f4f5;
+          color: #F6F6F6;
           cursor: pointer;
           text-align: left;
           transition: all 0.12s ease;
         }
 
         .cc-action-item:hover {
-          background: rgba(255, 255, 255, 0.07);
+          background: rgba(246, 246, 246, 0.07);
           transform: translateX(2px);
         }
 
         .cc-action-item.cc-item-ai {
-          background: rgba(99, 102, 241, 0.09);
-          border: 1px solid rgba(99, 102, 241, 0.2);
+          background: rgba(77, 89, 227, 0.1);
+          border: 1px solid rgba(77, 89, 227, 0.25);
         }
 
         .cc-action-item.cc-item-ai:hover {
-          background: rgba(99, 102, 241, 0.18);
-          border-color: rgba(99, 102, 241, 0.4);
+          background: rgba(77, 89, 227, 0.2);
+          border-color: rgba(77, 89, 227, 0.5);
         }
 
         .cc-item-icon {
@@ -268,20 +268,20 @@
           width: 26px;
           height: 26px;
           border-radius: 6px;
-          background: rgba(255, 255, 255, 0.05);
-          color: #a1a1aa;
+          background: rgba(246, 246, 246, 0.05);
+          color: #9ea3be;
           flex-shrink: 0;
           transition: all 0.12s ease;
         }
 
         .cc-action-item:hover .cc-item-icon {
           color: #ffffff;
-          background: rgba(255, 255, 255, 0.1);
+          background: rgba(246, 246, 246, 0.1);
         }
 
         .cc-action-item.cc-item-ai .cc-item-icon {
-          background: rgba(99, 102, 241, 0.22);
-          color: #818cf8;
+          background: rgba(77, 89, 227, 0.25);
+          color: #4D59E3;
         }
 
         .cc-item-body {
@@ -292,13 +292,13 @@
         .cc-item-title {
           font-size: 12.5px;
           font-weight: 550;
-          color: #ffffff;
+          color: #F6F6F6;
           line-height: 1.2;
         }
 
         .cc-item-desc {
           font-size: 10.5px;
-          color: #a1a1aa;
+          color: #9ea3be;
           margin-top: 1px;
         }
 
@@ -307,8 +307,8 @@
           font-weight: 600;
           padding: 2px 6px;
           border-radius: 4px;
-          background: rgba(99, 102, 241, 0.2);
-          color: #a5b4fc;
+          background: rgba(198, 227, 84, 0.15);
+          color: #C6E354;
           letter-spacing: 0.02em;
           text-transform: uppercase;
         }
@@ -318,14 +318,14 @@
           align-items: center;
           justify-content: space-between;
           padding: 7px 14px 9px;
-          border-top: 1px solid rgba(255, 255, 255, 0.05);
+          border-top: 1px solid rgba(246, 246, 246, 0.05);
           background: rgba(0, 0, 0, 0.2);
           font-size: 10px;
-          color: #71717a;
+          color: #6b708d;
         }
 
         .cc-sidepanel-hint {
-          color: #818cf8;
+          color: #4D59E3;
           font-weight: 500;
           display: flex;
           align-items: center;
@@ -338,12 +338,12 @@
           display: flex;
           align-items: center;
           gap: 8px;
-          background: rgba(16, 185, 129, 0.12);
-          border: 1px solid rgba(16, 185, 129, 0.3);
+          background: rgba(198, 227, 84, 0.15);
+          border: 1px solid rgba(198, 227, 84, 0.4);
           border-radius: 12px;
-          color: #34d399;
+          color: #C6E354;
           font-size: 12px;
-          font-weight: 550;
+          font-weight: 600;
           animation: ccPopIn 0.14s ease forwards;
         }
       </style>
@@ -448,7 +448,7 @@
 
         <div class="cc-actions-list">
           <button class="cc-action-item" data-action="highlight">
-            <div class="cc-item-icon">
+            <div class="cc-item-icon" style="color: #C6E354;">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="m9 11-6 6v3h3l6-6"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/>
               </svg>
@@ -461,7 +461,7 @@
           </button>
 
           <button class="cc-action-item" data-action="note">
-            <div class="cc-item-icon">
+            <div class="cc-item-icon" style="color: #4D59E3;">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
               </svg>
@@ -473,7 +473,7 @@
           </button>
 
           <button class="cc-action-item" data-action="question">
-            <div class="cc-item-icon">
+            <div class="cc-item-icon" style="color: #ED4059;">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
               </svg>
@@ -486,7 +486,7 @@
 
           <button class="cc-action-item cc-item-ai" data-action="ask-ai">
             <div class="cc-item-icon">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4D59E3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>
               </svg>
             </div>
@@ -494,7 +494,7 @@
               <div class="cc-item-title">Ask AI / Explain</div>
               <div class="cc-item-desc">Get instant grounded answer</div>
             </div>
-            <span class="cc-item-badge" style="background: rgba(99,102,241,0.25); color: #c7d2fe;">AI ↗</span>
+            <span class="cc-item-badge" style="background: rgba(198,227,84,0.18); color: #C6E354;">AI ↗</span>
           </button>
 
           <button class="cc-action-item" data-action="copy">
@@ -511,7 +511,13 @@
         </div>
 
         <div class="cc-menu-footer">
-          <span>🔒 Local-first</span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            Local-first
+          </span>
           <span class="cc-sidepanel-hint">Dedicated Side Panel ↗</span>
         </div>
       </div>

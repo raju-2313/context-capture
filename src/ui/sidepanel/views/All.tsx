@@ -3,6 +3,7 @@ import { captures as capRepo } from "../../../data/repositories";
 import { contextLifecycle } from "../../../core/context/lifecycle";
 import { CaptureCard } from "../../components/CaptureCard";
 import { searchIndex } from "../../../core/search/index";
+import { SearchIcon } from "../../components/Icons";
 
 type SortOrder = "newest" | "oldest" | "domain";
 
@@ -82,14 +83,18 @@ export default function AllCaptures({ onViewDetail }: { onViewDetail?: (id: stri
   return (
     <div class="container">
       <div class="filter-bar" style={{ flexWrap: "wrap", gap: 6 }}>
-        <input
-          ref={searchRef}
-          class="search-bar"
-          placeholder="Search captures..."
-          value={query}
-          onInput={(e) => { setQuery(e.currentTarget.value); setPage(0); }}
-          aria-label="Search captures"
-        />
+        <div style={{ position: "relative", flex: 1, minWidth: 160, display: "flex", alignItems: "center" }}>
+          <SearchIcon size={14} style={{ position: "absolute", left: 10, color: "var(--text-muted)", pointerEvents: "none" }} />
+          <input
+            ref={searchRef}
+            class="search-bar"
+            style={{ paddingLeft: 30, width: "100%" }}
+            placeholder="Search captures..."
+            value={query}
+            onInput={(e) => { setQuery(e.currentTarget.value); setPage(0); }}
+            aria-label="Search captures"
+          />
+        </div>
         <select
           class="filter-select"
           value={filters.type}

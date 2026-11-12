@@ -1,5 +1,6 @@
 import { useState } from "preact/hooks";
 import { render } from "preact/compat";
+import { ScreenshotIcon, BookmarkIcon, ExpandIcon, NoteIcon, QuestionIcon } from "../components/Icons";
 
 export default function QuickAdd() {
   const [text, setText] = useState("");
@@ -76,42 +77,48 @@ export default function QuickAdd() {
         flexDirection: "column",
         gap: 12,
         minWidth: 340,
-        background: "var(--bg, #09090b)",
-        color: "var(--text, #f4f4f5)",
+        background: "var(--bg, #0b0c11)",
+        color: "var(--text, #F6F6F6)",
       }}
     >
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent, #6366f1)" }}></span>
-          <strong style={{ fontSize: 13, letterSpacing: "-0.01em" }}>ContextCapture</strong>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--color-primary, #4D59E3)", boxShadow: "0 0 8px var(--color-primary, #4D59E3)" }}></span>
+          <strong style={{ fontSize: 13, letterSpacing: "-0.01em", color: "var(--color-neutral, #F6F6F6)" }}>ContextCapture</strong>
         </div>
-        <div style={{ display: "flex", gap: 4, background: "var(--surface, #131418)", padding: 2, borderRadius: 6 }}>
+        <div style={{ display: "flex", gap: 4, background: "var(--surface, #141622)", padding: 2, borderRadius: 6, border: "1px solid var(--border)" }}>
           <button
             class="btn"
             style={{
-              padding: "2px 8px",
+              padding: "3px 8px",
               fontSize: 11,
-              background: type === "note" ? "var(--accent, #6366f1)" : "transparent",
-              color: type === "note" ? "#fff" : "var(--text-secondary, #a1a1aa)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              background: type === "note" ? "var(--color-primary, #4D59E3)" : "transparent",
+              color: type === "note" ? "#ffffff" : "var(--text-secondary)",
               border: "none",
             }}
             onClick={() => setType("note")}
           >
-            Note
+            <NoteIcon size={12} /> Note
           </button>
           <button
             class="btn"
             style={{
-              padding: "2px 8px",
+              padding: "3px 8px",
               fontSize: 11,
-              background: type === "question" ? "var(--accent, #6366f1)" : "transparent",
-              color: type === "question" ? "#fff" : "var(--text-secondary, #a1a1aa)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              background: type === "question" ? "var(--color-rare, #ED4059)" : "transparent",
+              color: type === "question" ? "#ffffff" : "var(--text-secondary)",
               border: "none",
             }}
             onClick={() => setType("question")}
           >
-            Question
+            <QuestionIcon size={12} /> Question
           </button>
         </div>
       </div>
@@ -132,21 +139,21 @@ export default function QuickAdd() {
       <div style={{ display: "flex", gap: 6 }}>
         <button
           class="btn"
-          style={{ flex: 1, fontSize: 11.5, padding: "6px 8px" }}
+          style={{ flex: 1, fontSize: 11.5, padding: "7px 8px", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}
           onClick={handleTakeScreenshot}
           disabled={loading}
           title="Capture active tab screenshot and open side panel"
         >
-          📸 Screenshot
+          <ScreenshotIcon size={14} color="var(--color-rare, #ED4059)" /> Screenshot
         </button>
         <button
           class="btn"
-          style={{ flex: 1, fontSize: 11.5, padding: "6px 8px" }}
+          style={{ flex: 1, fontSize: 11.5, padding: "7px 8px", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}
           onClick={handleBookmarkTab}
           disabled={loading}
           title="Bookmark active webpage into current context"
         >
-          🔗 Bookmark
+          <BookmarkIcon size={14} color="var(--color-primary, #4D59E3)" /> Bookmark
         </button>
       </div>
 
@@ -154,7 +161,7 @@ export default function QuickAdd() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 4, borderTop: "1px solid var(--border)" }}>
         <button
           class="btn"
-          style={{ fontSize: 11 }}
+          style={{ fontSize: 11, display: "inline-flex", alignItems: "center", gap: 4 }}
           onClick={async () => {
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             if (tab?.windowId && chrome.sidePanel?.open) {
@@ -163,7 +170,7 @@ export default function QuickAdd() {
             }
           }}
         >
-          Open Panel
+          <ExpandIcon size={12} /> Open Panel
         </button>
         <div style={{ display: "flex", gap: 6 }}>
           <button class="btn" style={{ fontSize: 11 }} onClick={() => window.close()}>

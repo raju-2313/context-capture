@@ -1,6 +1,13 @@
 import { useState, useEffect } from "preact/hooks";
 import { aiAssistant, GroundedAnswer, Citation } from "../../../core/ai/assistant";
 import { contexts as ctxRepo, projects as projRepo } from "../../../data/repositories";
+import {
+  LockIcon,
+  LightbulbIcon,
+  QuestionIcon,
+  NoteIcon,
+  SparklesIcon,
+} from "../../components/Icons";
 
 interface AssistantViewProps {
   onViewDetail?: (captureId: string) => void;
@@ -86,13 +93,14 @@ export default function AssistantView({ onViewDetail, initialQuery }: AssistantV
           fontSize: 11,
           display: "flex",
           alignItems: "center",
-          gap: 6,
+          gap: 8,
           color: "var(--text-secondary)",
+          border: "1px solid var(--border)",
         }}
       >
-        <span>🔒</span>
+        <LockIcon size={14} color="var(--color-primary, #4D59E3)" />
         <span>
-          <strong>Grounded AI</strong> — Answers cite only your saved captures. Zero external telemetry.
+          <strong style={{ color: "var(--color-neutral, #F6F6F6)" }}>Grounded AI</strong> — Answers cite only your saved captures. Zero external telemetry.
         </span>
       </div>
 
@@ -152,8 +160,8 @@ export default function AssistantView({ onViewDetail, initialQuery }: AssistantV
             if (e.key === "Enter") handleAsk();
           }}
         />
-        <button class="btn btn-primary" onClick={() => handleAsk()} disabled={loading}>
-          {loading ? "..." : "Ask"}
+        <button class="btn btn-primary" onClick={() => handleAsk()} disabled={loading} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <SparklesIcon size={13} /> {loading ? "..." : "Ask"}
         </button>
       </div>
 
@@ -161,32 +169,32 @@ export default function AssistantView({ onViewDetail, initialQuery }: AssistantV
       <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
         <button
           class="btn"
-          style={{ fontSize: 11, padding: "3px 8px" }}
+          style={{ fontSize: 11, padding: "4px 9px", display: "inline-flex", alignItems: "center", gap: 5 }}
           onClick={() => {
             setQuery("What are the key points?");
             handleAsk("What are the key points?");
           }}
         >
-          💡 Key points?
+          <LightbulbIcon size={12} color="var(--color-highlight, #C6E354)" /> Key points?
         </button>
         <button
           class="btn"
-          style={{ fontSize: 11, padding: "3px 8px" }}
+          style={{ fontSize: 11, padding: "4px 9px", display: "inline-flex", alignItems: "center", gap: 5 }}
           onClick={() => {
             setQuery("What questions did I capture?");
             handleAsk("What questions did I capture?");
           }}
         >
-          ❓ My questions
+          <QuestionIcon size={12} color="var(--color-rare, #ED4059)" /> My questions
         </button>
         {scope !== "all" && (
           <button
             class="btn"
-            style={{ fontSize: 11, padding: "3px 8px", background: "var(--surface)" }}
+            style={{ fontSize: 11, padding: "4px 9px", background: "var(--surface)", display: "inline-flex", alignItems: "center", gap: 5 }}
             onClick={handleSummarize}
             disabled={loading}
           >
-            📝 Summarize Scope
+            <NoteIcon size={12} color="var(--color-primary, #4D59E3)" /> Summarize Scope
           </button>
         )}
       </div>

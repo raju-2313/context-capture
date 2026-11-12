@@ -4,6 +4,16 @@ import { settingsStore } from "../../data/settings";
 import { captures as capRepo, contexts as ctxRepo, attachments as attRepo } from "../../data/repositories";
 import { exportEngine } from "../../core/export";
 import { obsidianIntegration } from "../../core/integrations/obsidian";
+import {
+  ZipIcon,
+  ExportIcon,
+  PdfIcon,
+  MarkdownIcon,
+  FolderIcon,
+  ObsidianIcon,
+  ImportIcon,
+  SparklesIcon,
+} from "../components/Icons";
 
 type ImportStatus = { phase: "idle" | "running" | "done" | "error"; message: string };
 
@@ -250,7 +260,7 @@ export default function Settings() {
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <button
               class="btn btn-primary"
-              style={{ width: "100%" }}
+              style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}
               onClick={async () => {
                 setExporting("zip");
                 try {
@@ -262,21 +272,23 @@ export default function Settings() {
               }}
               disabled={exporting === "zip"}
             >
-              {exporting === "zip" ? "Exporting ZIP..." : "🗜️ Export Complete ZIP Backup (with Attachments)"}
+              <ZipIcon size={16} />
+              {exporting === "zip" ? "Exporting ZIP..." : "Export Complete ZIP Backup (with Attachments)"}
             </button>
 
             <button
               class="btn"
-              style={{ width: "100%" }}
+              style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}
               onClick={handleExportJSON}
               disabled={exporting === "json"}
             >
-              {exporting === "json" ? "Exporting..." : "📦 Export JSON Backup"}
+              <ExportIcon size={16} />
+              {exporting === "json" ? "Exporting..." : "Export JSON Backup"}
             </button>
 
             <button
               class="btn"
-              style={{ width: "100%" }}
+              style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}
               onClick={async () => {
                 setExporting("pdf");
                 try {
@@ -290,30 +302,42 @@ export default function Settings() {
               }}
               disabled={exporting === "pdf"}
             >
-              {exporting === "pdf" ? "Generating PDF..." : "📄 Export All as PDF"}
+              <PdfIcon size={16} />
+              {exporting === "pdf" ? "Generating PDF..." : "Export All as PDF"}
             </button>
 
             <button
               class="btn"
-              style={{ width: "100%" }}
+              style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}
               onClick={handleExportMarkdown}
               disabled={exporting === "md"}
             >
-              {exporting === "md" ? "Exporting..." : "📝 Export All as Markdown"}
+              <MarkdownIcon size={16} />
+              {exporting === "md" ? "Exporting..." : "Export All as Markdown"}
             </button>
 
             <button
               class="btn"
-              style={{ width: "100%" }}
+              style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}
               onClick={handleExportMarkdownByContext}
               disabled={exporting === "md-ctx"}
             >
-              {exporting === "md-ctx" ? "Exporting..." : "📂 Export All Contexts as Markdown"}
+              <FolderIcon size={16} />
+              {exporting === "md-ctx" ? "Exporting..." : "Export All Contexts as Markdown"}
             </button>
 
             <button
               class="btn"
-              style={{ width: "100%", background: "#705dcf20", color: "#705dcf", border: "1px solid #705dcf" }}
+              style={{
+                width: "100%",
+                background: "rgba(77, 89, 227, 0.12)",
+                color: "var(--color-primary, #4D59E3)",
+                border: "1px solid rgba(77, 89, 227, 0.4)",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+              }}
               onClick={async () => {
                 setExporting("obsidian");
                 try {
@@ -325,7 +349,8 @@ export default function Settings() {
               }}
               disabled={exporting === "obsidian"}
             >
-              {exporting === "obsidian" ? "Exporting Vault..." : "💎 Export Obsidian Vault (with Wikilinks & Frontmatter)"}
+              <ObsidianIcon size={16} color="var(--color-primary, #4D59E3)" />
+              {exporting === "obsidian" ? "Exporting Vault..." : "Export Obsidian Vault (with Wikilinks & Frontmatter)"}
             </button>
           </div>
         </div>
@@ -342,15 +367,18 @@ export default function Settings() {
               placeholder="https://your-webhook-endpoint.com/api"
               style={{ width: "100%" }}
             />
-            <div style={{ fontSize: 11, color: "#86868b" }}>
-              Captures can be dispatched to this webhook using the 📤 button on any capture card.
+            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+              Captures can be dispatched to this webhook using the export action on any capture card.
             </div>
           </div>
         </div>
 
         {/* Phase 4: Grounded AI Assistant Settings */}
         <div class="settings-section">
-          <h4>AI Knowledge Assistant</h4>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+            <SparklesIcon size={14} color="var(--color-highlight, #C6E354)" />
+            <h4 style={{ margin: 0 }}>AI Knowledge Assistant</h4>
+          </div>
           <div class="setting-row">
             <span>Enable Grounded AI Q&amp;A</span>
             <label class="toggle">
@@ -362,7 +390,7 @@ export default function Settings() {
               <span class="toggle-slider"></span>
             </label>
           </div>
-          <div style={{ fontSize: 11, color: "#86868b", marginTop: 4 }}>
+          <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>
             Answers are grounded strictly in your captures and never sent to cloud servers without explicit user request.
           </div>
         </div>
@@ -372,11 +400,12 @@ export default function Settings() {
           <h4>Import</h4>
           <button
             class="btn"
-            style={{ width: "100%" }}
+            style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}
             onClick={handleImportBackup}
             disabled={importStatus.phase === "running"}
           >
-            {importStatus.phase === "running" ? "Importing..." : "📥 Import Backup (JSON)"}
+            <ImportIcon size={16} />
+            {importStatus.phase === "running" ? "Importing..." : "Import Backup (JSON)"}
           </button>
           {importStatus.message && (
             <div

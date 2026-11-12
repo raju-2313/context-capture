@@ -4,6 +4,14 @@ import { contextLifecycle } from "../../../core/context/lifecycle";
 import { captures as capRepo, contexts as ctxRepo } from "../../../data/repositories";
 import { CaptureCard } from "../../components/CaptureCard";
 import { voiceNoteIntegration, VoiceRecordingState } from "../../../core/integrations/voice";
+import {
+  ScreenshotIcon,
+  TextIcon,
+  NoteIcon,
+  BookmarkIcon,
+  MicIcon,
+  StopIcon,
+} from "../../components/Icons";
 
 export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) => void } = {}) {
   const [contextId, setContextId] = useState<string | null>(null);
@@ -121,15 +129,21 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
       </div>
 
       <div class="quick-add-bar">
-        <button class="btn btn-primary" onClick={captureScreenshot} title="Capture visible screen">Screenshot</button>
+        <button class="btn btn-primary" onClick={captureScreenshot} title="Capture visible screen" style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+          <ScreenshotIcon size={13} color="var(--color-rare, #ED4059)" /> Screenshot
+        </button>
         <button class="btn" onClick={() => {
           const t = prompt("Enter text to capture:");
           if (t) captureText(t);
-        }}>Capture Text</button>
+        }} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+          <TextIcon size={13} color="var(--color-highlight, #C6E354)" /> Text
+        </button>
         <button class="btn" onClick={() => {
           const t = prompt("Enter a note:");
           if (t) capturePipeline.captureNote({ text: t, tabId: null, windowId: null }).then(() => load());
-        }}>Quick Note</button>
+        }} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+          <NoteIcon size={13} color="var(--color-primary, #4D59E3)" /> Note
+        </button>
         <button class="btn" onClick={async () => {
           const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
           if (tab && tab.url && tab.id) {
@@ -141,10 +155,18 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
             });
             await load();
           }
-        }}>Bookmark Page</button>
+        }} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+          <BookmarkIcon size={13} color="var(--color-primary, #4D59E3)" /> Bookmark
+        </button>
         <button
           class="btn"
-          style={{ background: voiceState.isRecording ? "var(--danger)" : "var(--muted)", color: voiceState.isRecording ? "#fff" : "inherit" }}
+          style={{
+            background: voiceState.isRecording ? "var(--color-rare, #ED4059)" : "var(--muted)",
+            color: voiceState.isRecording ? "#ffffff" : "inherit",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+          }}
           onClick={async () => {
             if (voiceState.isRecording) {
               voiceNoteIntegration.stopRecording();
@@ -163,7 +185,15 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
           }}
           title="Record a voice note"
         >
-          {voiceState.isRecording ? "⏹ Stop" : "🎤 Voice"}
+          {voiceState.isRecording ? (
+            <>
+              <StopIcon size={13} /> Stop
+            </>
+          ) : (
+            <>
+              <MicIcon size={13} color="var(--color-highlight, #C6E354)" /> Voice
+            </>
+          )}
         </button>
       </div>
 
@@ -171,15 +201,16 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
         <div
           style={{
             padding: "8px 12px",
-            background: "#ff3b3015",
-            border: "1px solid var(--danger)",
+            background: "var(--rare-subtle)",
+            border: "1px solid var(--color-rare, #ED4059)",
             borderRadius: 8,
             marginBottom: 10,
             fontSize: 12,
           }}
         >
-          <div style={{ fontWeight: 600, color: "var(--danger)", display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ animation: "pulse 1s infinite" }}>🔴</span> Recording Voice Note...
+          <div style={{ fontWeight: 600, color: "var(--color-rare, #ED4059)", display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--color-rare, #ED4059)", display: "inline-block" }}></span>
+            Recording Voice Note...
           </div>
           <div style={{ marginTop: 4, fontStyle: "italic", color: "var(--text)" }}>
             {voiceState.transcript} <span style={{ color: "var(--text-secondary)" }}>{voiceState.interimTranscript}</span>
@@ -190,23 +221,25 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {captures.length === 0 ? (
           <div class="empty-state" style={{ height: "auto", padding: "24px 16px" }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
-            <h3 style={{ marginBottom: 8 }}>Welcome to ContextCapture!</h3>
+            <div style={{ marginBottom: 12, display: "flex", justifyContent: "center" }}>
+              <NoteIcon size={36} color="var(--color-primary, #4D59E3)" />
+            </div>
+            <h3 style={{ marginBottom: 8, color: "var(--color-neutral, #F6F6F6)" }}>Welcome to ContextCapture</h3>
             <p style={{ marginBottom: 16, color: "var(--text-secondary)" }}>
-              Start capturing by selecting text on the page, taking a screenshot, or adding a quick note.
+              Start capturing by selecting text on any page, taking a screenshot, or adding a quick note.
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, width: "100%", textAlign: "center" }}>
-              <div style={{ padding: "10px 6px", background: "var(--surface)", borderRadius: 8, border: "1px solid var(--border)" }}>
-                <div style={{ fontSize: 20 }}>📝</div>
-                <div style={{ fontSize: 11, fontWeight: 600, marginTop: 4 }}>Text &amp; Notes</div>
+              <div style={{ padding: "12px 6px", background: "var(--surface)", borderRadius: 8, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                <TextIcon size={20} color="var(--color-highlight, #C6E354)" />
+                <div style={{ fontSize: 11, fontWeight: 600 }}>Text &amp; Notes</div>
               </div>
-              <div style={{ padding: "10px 6px", background: "var(--surface)", borderRadius: 8, border: "1px solid var(--border)" }}>
-                <div style={{ fontSize: 20 }}>📸</div>
-                <div style={{ fontSize: 11, fontWeight: 600, marginTop: 4 }}>Screenshots</div>
+              <div style={{ padding: "12px 6px", background: "var(--surface)", borderRadius: 8, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                <ScreenshotIcon size={20} color="var(--color-rare, #ED4059)" />
+                <div style={{ fontSize: 11, fontWeight: 600 }}>Screenshots</div>
               </div>
-              <div style={{ padding: "10px 6px", background: "var(--surface)", borderRadius: 8, border: "1px solid var(--border)" }}>
-                <div style={{ fontSize: 20 }}>🔗</div>
-                <div style={{ fontSize: 11, fontWeight: 600, marginTop: 4 }}>Links &amp; Pages</div>
+              <div style={{ padding: "12px 6px", background: "var(--surface)", borderRadius: 8, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                <BookmarkIcon size={20} color="var(--color-primary, #4D59E3)" />
+                <div style={{ fontSize: 11, fontWeight: 600 }}>Links &amp; Pages</div>
               </div>
             </div>
           </div>

@@ -4,6 +4,18 @@ import { CaptureEditModal } from "./CaptureEditModal";
 import { Toast } from "./Toast";
 import { clipboardIntegration } from "../../core/integrations/clipboard";
 import { webhookIntegration } from "../../core/integrations/webhook";
+import {
+  CopyIcon,
+  ExportIcon,
+  SearchIcon,
+  EditIcon,
+  TrashIcon,
+  PlusIcon,
+  ExpandIcon,
+  ScreenshotIcon,
+  NoteIcon,
+  DuplicateIcon,
+} from "./Icons";
 
 export function CaptureCard({
   capture,
@@ -72,12 +84,12 @@ export function CaptureCard({
 
   const typeLabel = currentCapture.type.charAt(0).toUpperCase() + currentCapture.type.slice(1);
   const typeColors: Record<string, string> = {
-    text: "#0071e3",
-    code: "#34c759",
-    link: "#5ac8fa",
-    question: "#ff9500",
-    note: "#bf5af2",
-    screenshot: "#ff3b30",
+    text: "var(--color-highlight, #C6E354)",       // Highlighting Volt
+    note: "var(--color-primary, #4D59E3)",         // Main Blurple
+    code: "var(--color-primary, #4D59E3)",         // Main Blurple
+    link: "var(--color-primary, #4D59E3)",         // Main Blurple
+    question: "var(--color-rare, #ED4059)",        // Rare Coral/Crimson
+    screenshot: "var(--color-rare, #ED4059)",      // Rare Coral/Crimson
   };
 
   const tags: string[] = currentCapture.tags || [];
@@ -124,7 +136,7 @@ export function CaptureCard({
         transition: "opacity 0.2s",
       }}
     >
-      <span class="card-type-badge">{typeLabel}</span>
+      <span class={`card-type-badge badge-${currentCapture.type}`}>{typeLabel}</span>
       <div class="card-content">
         <div class="card-title">
           {currentCapture.source_url ? (
@@ -153,19 +165,19 @@ export function CaptureCard({
           {currentCapture.duplicate_warning && (
             <span
               style={{
-                color: "var(--warning, #ff9500)",
+                color: "var(--color-rare, #ED4059)",
                 fontSize: 11,
                 fontWeight: 600,
                 display: "inline-flex",
                 alignItems: "center",
-                gap: 2,
+                gap: 4,
               }}
               title="A capture with this URL already exists in your library"
             >
-              ⚠ Duplicate URL
+              <DuplicateIcon size={12} color="var(--color-rare, #ED4059)" /> Duplicate URL
             </span>
           )}
-          {addedMsg && <span style={{ color: "var(--success)", fontWeight: 600 }}>{addedMsg}</span>}
+          {addedMsg && <span style={{ color: "var(--color-highlight, #C6E354)", fontWeight: 600 }}>{addedMsg}</span>}
         </div>
         {currentCapture.content_text && <div class="card-text">{currentCapture.content_text}</div>}
         {currentCapture.code_language && (
@@ -185,21 +197,26 @@ export function CaptureCard({
                   class="card-screenshot-img"
                   loading="lazy"
                 />
-                <div class="card-screenshot-badge">🔍 Expand</div>
+                <div class="card-screenshot-badge" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  <ExpandIcon size={12} /> Expand
+                </div>
               </div>
             ) : imageLoading ? (
               <div class="card-screenshot-placeholder">
                 Loading screenshot...
               </div>
             ) : (
-              <div class="card-screenshot-placeholder">
-                📸 Screenshot saved
+              <div class="card-screenshot-placeholder" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                <ScreenshotIcon size={16} /> Screenshot saved
               </div>
             )}
           </div>
         )}
         {currentCapture.user_note && (
-          <div class="card-note">💬 {currentCapture.user_note}</div>
+          <div class="card-note" style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
+            <NoteIcon size={14} style={{ marginTop: 2, flexShrink: 0 }} />
+            <span>{currentCapture.user_note}</span>
+          </div>
         )}
         <div class="card-tags">
           {tags.map((tag: string) => (
@@ -249,7 +266,7 @@ export function CaptureCard({
             title="Copy formatted note to clipboard"
             aria-label="Copy capture to clipboard"
           >
-            📋
+            <CopyIcon size={14} />
           </button>
           <button
             class="btn-icon"
@@ -262,7 +279,7 @@ export function CaptureCard({
             title="Send to Webhook (Notion / Zapier / Readwise)"
             aria-label="Send capture to webhook"
           >
-            📤
+            <ExportIcon size={14} />
           </button>
           {onViewDetail && (
             <button
@@ -271,11 +288,11 @@ export function CaptureCard({
               title="View details & related captures"
               aria-label="View capture details"
             >
-              🔍
+              <SearchIcon size={14} />
             </button>
           )}
           <button class="btn-icon" onClick={openPicker} title="Add to Project" aria-label="Add to Project">
-            + Project
+            <PlusIcon size={12} /> Project
           </button>
           <button
             class="btn-icon"
@@ -286,7 +303,7 @@ export function CaptureCard({
             title="Edit"
             aria-label="Edit capture"
           >
-            &#9998;
+            <EditIcon size={14} />
           </button>
           <button
             class="btn-icon btn-danger"
@@ -294,7 +311,7 @@ export function CaptureCard({
             title="Delete"
             aria-label="Delete capture"
           >
-            &#10007;
+            <TrashIcon size={14} color="var(--color-rare, #ED4059)" />
           </button>
         </div>
       </div>

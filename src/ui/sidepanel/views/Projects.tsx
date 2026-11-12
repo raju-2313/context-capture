@@ -3,6 +3,7 @@ import { projects as projRepo, captures as capRepo } from "../../../data/reposit
 import { ProjectRecord, Capture } from "../../../shared/types";
 import { CaptureCard } from "../../components/CaptureCard";
 import { exportEngine } from "../../../core/export";
+import { PlusIcon, ExportIcon } from "../../components/Icons";
 
 export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: string) => void } = {}) {
   const [projectList, setProjectList] = useState<ProjectRecord[]>([]);
@@ -80,8 +81,8 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
           <button class="btn btn-icon" onClick={() => { setSelectedProject(null); loadProjects(); }}>
             &larr; All Projects
           </button>
-          <button class="btn btn-primary" onClick={exportProject} disabled={projectCaptures.length === 0}>
-            Export Markdown
+          <button class="btn btn-primary" onClick={exportProject} disabled={projectCaptures.length === 0} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <ExportIcon size={14} /> Export Markdown
           </button>
         </div>
 
@@ -125,8 +126,8 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
     <div class="container">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <h3 style={{ fontSize: 14 }}>Projects ({projectList.length})</h3>
-        <button class="btn btn-primary" onClick={() => setShowCreateModal(!showCreateModal)}>
-          {showCreateModal ? "Cancel" : "+ New Project"}
+        <button class="btn btn-primary" onClick={() => setShowCreateModal(!showCreateModal)} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+          <PlusIcon size={12} /> {showCreateModal ? "Cancel" : "New Project"}
         </button>
       </div>
 
