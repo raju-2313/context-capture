@@ -239,7 +239,10 @@ export interface GetStorageInfoMessage extends BaseMessage {
 
 export interface OpenPanelMessage extends BaseMessage {
   type: "OPEN_PANEL";
-  payload: null;
+  payload?: {
+    targetTab?: "thistab" | "all" | "contexts" | "projects" | "assistant" | "settings";
+    prefillQuery?: string;
+  } | null;
 }
 
 export interface ReconcileBindingsMessage extends BaseMessage {

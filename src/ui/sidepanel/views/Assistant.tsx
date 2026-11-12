@@ -4,10 +4,11 @@ import { contexts as ctxRepo, projects as projRepo } from "../../../data/reposit
 
 interface AssistantViewProps {
   onViewDetail?: (captureId: string) => void;
+  initialQuery?: string;
 }
 
-export default function AssistantView({ onViewDetail }: AssistantViewProps) {
-  const [query, setQuery] = useState("");
+export default function AssistantView({ onViewDetail, initialQuery }: AssistantViewProps) {
+  const [query, setQuery] = useState(initialQuery || "");
   const [scope, setScope] = useState<"all" | "context" | "project">("all");
   const [scopeId, setScopeId] = useState<string>("");
   const [contexts, setContexts] = useState<any[]>([]);
@@ -19,6 +20,13 @@ export default function AssistantView({ onViewDetail }: AssistantViewProps) {
   useEffect(() => {
     loadScopes();
   }, []);
+
+  useEffect(() => {
+    if (initialQuery && initialQuery.trim()) {
+      setQuery(initialQuery);
+      handleAsk(initialQuery);
+    }
+  }, [initialQuery]);
 
   async function loadScopes() {
     const [ctxList, prjList] = await Promise.all([

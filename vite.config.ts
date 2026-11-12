@@ -36,11 +36,13 @@ export default defineConfig({
         offscreen: path.resolve(__dirname, "offscreen/offscreen.html"),
         background: path.resolve(__dirname, "src/background/index.ts"),
         injected: path.resolve(__dirname, "src/injected/readSelection.ts"),
+        selectionTooltip: path.resolve(__dirname, "src/content/selectionTooltip.ts"),
       },
       output: {
         entryFileNames: (chunk) => {
           if (chunk.name === "background") return "background.js";
           if (chunk.name === "injected") return "injected/readSelection.js";
+          if (chunk.name === "selectionTooltip") return "content/selectionTooltip.js";
           return "assets/[name]-[hash].js";
         },
         chunkFileNames: "assets/[name]-[hash].js",

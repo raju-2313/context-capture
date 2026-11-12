@@ -9,24 +9,74 @@ export class MessageRouter {
     try {
       let result: any;
       switch (message.type) {
-        case "CAPTURE_TEXT":
-          result = await capturePipeline.captureText(message.payload);
+        case "CAPTURE_TEXT": {
+          const tabId = message.payload.tabId || _sender.tab?.id || 0;
+          const windowId = message.payload.windowId || _sender.tab?.windowId || 0;
+          result = await capturePipeline.captureText({
+            ...message.payload,
+            tabId,
+            windowId,
+          });
           break;
-        case "CAPTURE_NOTE":
-          result = await capturePipeline.captureNote(message.payload);
+        }
+        case "CAPTURE_NOTE": {
+          const tabId = message.payload.tabId ?? _sender.tab?.id ?? null;
+          const windowId = message.payload.windowId ?? _sender.tab?.windowId ?? null;
+          result = await capturePipeline.captureNote({
+            ...message.payload,
+            tabId,
+            windowId,
+          });
           break;
-        case "CAPTURE_QUESTION":
-          result = await capturePipeline.captureQuestion(message.payload);
+        }
+        case "CAPTURE_QUESTION": {
+          const tabId = message.payload.tabId ?? _sender.tab?.id ?? null;
+          const windowId = message.payload.windowId ?? _sender.tab?.windowId ?? null;
+          result = await capturePipeline.captureQuestion({
+            ...message.payload,
+            tabId,
+            windowId,
+          });
           break;
+        }
         case "CAPTURE_LINK":
           result = await capturePipeline.captureLink(message.payload);
           break;
-        case "CAPTURE_CODE":
-          result = await capturePipeline.captureCode(message.payload);
+        case "CAPTURE_CODE": {
+          const tabId = message.payload.tabId || _sender.tab?.id || 0;
+          const windowId = message.payload.windowId || _sender.tab?.windowId || 0;
+          result = await capturePipeline.captureCode({
+            ...message.payload,
+            tabId,
+            windowId,
+          });
           break;
+        }
         case "CAPTURE_SCREENSHOT":
           result = await capturePipeline.captureScreenshot(message.payload);
           break;
+        case "OPEN_PANEL": {
+          const winId = _sender.tab?.windowId;
+          if (winId && chrome.sidePanel?.open) {
+            try {
+              await chrome.sidePanel.open({ windowId: winId });
+            } catch (err) {
+              logger.warn("sidePanel.open failed", String(err));
+            }
+          }
+          const p = (message as any).payload;
+          if (p?.targetTab || p?.prefillQuery) {
+            setTimeout(() => {
+              chrome.runtime.sendMessage({
+                type: "NAVIGATE_PANEL",
+                targetTab: p.targetTab,
+                prefillQuery: p.prefillQuery,
+              }).catch(() => {});
+            }, 200);
+          }
+          result = { success: true };
+          break;
+        }
         case "GET_CONTEXT_FOR_TAB":
           result = await contextLifecycle.getContextForTab(message.payload.tabId);
           break;

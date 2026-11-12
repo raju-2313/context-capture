@@ -14,7 +14,13 @@
   ],
   "optional_permissions": [],
   "host_permissions": [],
-  "content_scripts": [],
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content/selectionTooltip.js"],
+      "run_at": "document_idle"
+    }
+  ],
   "background": {
     "service_worker": "background.js",
     "type": "module"

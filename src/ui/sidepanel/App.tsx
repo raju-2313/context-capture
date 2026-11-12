@@ -14,6 +14,7 @@ export default function SidePanelApp() {
   const [activeTab, setActiveTab] = useState<Tab>("thistab");
   const [captureCount, setCaptureCount] = useState<number>(0);
   const [detailCaptureId, setDetailCaptureId] = useState<string | null>(null);
+  const [assistantInitialQuery, setAssistantInitialQuery] = useState<string | null>(null);
 
   useEffect(() => {
     // Load capture count badge
@@ -46,11 +47,19 @@ export default function SidePanelApp() {
     return () => document.removeEventListener("keydown", handleKeydown);
   }, []);
 
-  // Refresh count when captures change
+  // Refresh count when captures change or handle navigation
   useEffect(() => {
     const handleMsg = (msg: any) => {
       if (msg?.type === "CAPTURE_SAVED") {
         capRepo.count().then(setCaptureCount).catch(() => {});
+      } else if (msg?.type === "NAVIGATE_PANEL") {
+        if (msg.targetTab) {
+          setActiveTab(msg.targetTab);
+          setDetailCaptureId(null);
+        }
+        if (msg.prefillQuery) {
+          setAssistantInitialQuery(msg.prefillQuery);
+        }
       }
     };
     chrome.runtime.onMessage.addListener(handleMsg);
@@ -140,7 +149,12 @@ export default function SidePanelApp() {
             {activeTab === "all" && <All onViewDetail={(id) => setDetailCaptureId(id)} />}
             {activeTab === "contexts" && <Contexts />}
             {activeTab === "projects" && <ProjectsView onViewDetail={(id) => setDetailCaptureId(id)} />}
-            {activeTab === "assistant" && <AssistantView onViewDetail={(id) => setDetailCaptureId(id)} />}
+            {activeTab === "assistant" && (
+              <AssistantView
+                onViewDetail={(id) => setDetailCaptureId(id)}
+                initialQuery={assistantInitialQuery ?? undefined}
+              />
+            )}
             {activeTab === "settings" && (
               <div class="empty-state" style={{ height: "auto", padding: 20 }}>
                 <h3>Settings</h3>
