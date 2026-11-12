@@ -2,8 +2,9 @@ import { useState } from "preact/hooks";
 import ThisTab from "./views/ThisTab";
 import All from "./views/All";
 import Contexts from "./views/Contexts";
+import ProjectsView from "./views/Projects";
 
-type Tab = "thistab" | "all" | "contexts" | "settings";
+type Tab = "thistab" | "all" | "contexts" | "projects" | "settings";
 
 export default function SidePanelApp() {
   const [activeTab, setActiveTab] = useState<Tab>("thistab");
@@ -42,6 +43,12 @@ export default function SidePanelApp() {
           Contexts
         </button>
         <button
+          class={`tab ${activeTab === "projects" ? "active" : ""}`}
+          onClick={() => setActiveTab("projects")}
+        >
+          Projects
+        </button>
+        <button
           class={`tab ${activeTab === "settings" ? "active" : ""}`}
           onClick={() => setActiveTab("settings")}
         >
@@ -52,6 +59,7 @@ export default function SidePanelApp() {
         {activeTab === "thistab" && <ThisTab />}
         {activeTab === "all" && <All />}
         {activeTab === "contexts" && <Contexts />}
+        {activeTab === "projects" && <ProjectsView />}
         {activeTab === "settings" && (
           <div class="empty-state" style={{ height: "auto", padding: 20 }}>
             <h3>Settings</h3>

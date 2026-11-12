@@ -108,6 +108,28 @@ export interface MetaRecord {
   install_id_local: string;
 }
 
+export interface ProjectRecord {
+  project_id: string;
+  title: string;
+  description: string | null;
+  status: "active" | "archived";
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  version: number;
+  owner_id: string | null;
+}
+
+export interface ProjectMembershipRecord {
+  project_id: string;
+  capture_id: string;
+  order_key: number;
+  section: string | null;
+  item_note: string | null;
+  added_at: string;
+  deleted_at: string | null;
+}
+
 export interface TabBinding {
   context_id: string;
   window_id: number;

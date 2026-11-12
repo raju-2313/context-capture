@@ -44,10 +44,20 @@ export interface CCDatabaseSchema {
     value: any;
     indexes: {};
   };
+  projects: {
+    key: string;
+    value: any;
+    indexes: { "by-status": string; "by-updated": string };
+  };
+  project_memberships: {
+    key: [string, string];
+    value: any;
+    indexes: { "by-project": string; "by-capture": string };
+  };
 }
 
 const DB_NAME = "cc";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbInstance: IDBDatabase | null = null;
 
@@ -95,6 +105,16 @@ function openConnection(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains("meta")) {
         db.createObjectStore("meta", { keyPath: "key" });
+      }
+      if (!db.objectStoreNames.contains("projects")) {
+        const p = db.createObjectStore("projects", { keyPath: "project_id" });
+        p.createIndex("by-status", "status");
+        p.createIndex("by-updated", "updated_at");
+      }
+      if (!db.objectStoreNames.contains("project_memberships")) {
+        const pm = db.createObjectStore("project_memberships", { keyPath: ["project_id", "capture_id"] });
+        pm.createIndex("by-project", "project_id");
+        pm.createIndex("by-capture", "capture_id");
       }
     };
     req.onsuccess = () => resolve(req.result);
