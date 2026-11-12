@@ -1,29 +1,31 @@
 # Progress Status
 
-## Phase 0 & Phase 1: Local-First MVP
+## Phase 0 & Phase 1: Local-First MVP (Completed)
+- Clean Manifest V3 setup with TypeScript, Preact, and Vite.
+- Tab-specific Context lifecycle (UUIDs, session tab binding, archive on close, restore, rebind).
+- Unified capture pipeline: Text, code, webpage references, notes, questions, screenshots.
+- Offline IndexedDB architecture with ACID transactions.
+- Fully working Side Panel (This Tab, All, Contexts, Settings) and Quick Add popup.
+- 100% passed test suite (unit and data layer tests).
 
-### Completed & Fixed
-- **Build System & Packaging Fix**:
-  - Identified and resolved the root cause of the raw JavaScript rendering in the extension view: Rollup `entryFileNames` was misconfigured to output JS code into `.html` files (`sidepanel/index.html`).
-  - Standardized HTML entry points (`sidepanel/index.html`, `popup/index.html`, `options/index.html`, `offscreen/offscreen.html`).
-  - Added Rollup Vite plugin to automatically emit clean `manifest.json` and asset bundles.
-  - Enabled `"type": "module"` on background service worker in `manifest.json`.
-  - Added extension icons (16, 32, 48, 128px) and mapped them in `manifest.json`.
-- **Database & IndexedDB Layer**:
-  - Fixed `InvalidStateError` and transaction timeouts in `src/data/db/index.ts` where `fn(transaction)` was mistakenly invoked inside `oncomplete` after the transaction finished.
-  - Added global `IDBKeyRange` polyfill in `tests/setup.ts` to fix Node/Vitest test environment.
-  - Verified context, capture, tag, attachment, and journal repositories with 100% passing tests.
-- **UI & Views**:
-  - Fixed missing `render()` invocations in `popup/index.tsx` and `options/index.tsx`.
-  - Added tab tracking in `ThisTab.tsx` (`chrome.tabs.onActivated`, `chrome.tabs.onUpdated`) so the sidepanel follows active tab switches.
-  - Context title now reflects real database state and updates dynamically when edited.
-  - Added `Open Tab`, `Bind`, and `Restore` implementations in `Contexts.tsx`.
-  - Removed external Google Fonts `@import` in `styles.css` to ensure 100% offline compliance and zero external network calls in Local Mode.
-- **Injected Scripts & Shortcuts**:
-  - Rewrote `src/injected/readSelection.ts` from an unused exported string into an executable IIFE returning text and anchor context.
-  - Fixed `chrome.sidePanel.open` in background command handler to target active window.
+## Phase 2A: Local Projects (Completed)
+- **Database Schema (v2)**:
+  - Added `projects` object store with indexes on `status` and `updated_at`.
+  - Added `project_memberships` join store with indexes on `project_id` and `capture_id`.
+- **Domain & Repository**:
+  - Implemented `ProjectRepository` in `src/data/repositories/projects.ts` (CRUD, add/remove capture memberships, referential many-to-many model without duplicating attachments or content).
+  - Verified with 2 new unit tests in `tests/unit/projects.test.ts`.
+- **User Interface**:
+  - Added `Projects` tab to the side panel navigation.
+  - Implemented `src/ui/sidepanel/views/Projects.tsx` with project listing, creation, and detailed capture curation view.
+  - Added `+ Project` button on `CaptureCard` allowing immediate addition of any capture to a project.
+  - Implemented Project-level Markdown export.
 
-### Test Verification
-- `npm run typecheck`: 0 errors.
-- `npm run test`: 5 test suites passed, 24 unit tests passed.
-- `npm run build`: Vite build passes, outputs clean HTML, JS, CSS, and manifest in `dist/`.
+## Git & GitHub Status
+- Repository initialized on `main` branch.
+- Configured with author `raju-2313 <kumbharraju784@gmail.com>`.
+- Remote set to `https://github.com/raju-2313/context-capture.git`.
+- Commits prepared:
+  1. `feat: complete Phase 0 and Phase 1 local-first MVP ContextCapture extension`
+  2. `feat(phase-2a): implement local projects and many-to-many capture memberships`
+- Once the repository `context-capture` is created on GitHub, run `git push -u origin main`.
