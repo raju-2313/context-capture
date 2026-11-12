@@ -140,11 +140,26 @@ export default function ThisTab() {
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {captures.length === 0 ? (
-          <div class="empty-state" style={{ height: "auto" }}>
-            <p>No captures in this tab context yet.</p>
-            <p style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 6 }}>
-              Select text on the webpage, capture a screenshot, or add a quick note.
+          <div class="empty-state" style={{ height: "auto", padding: "24px 16px" }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
+            <h3 style={{ marginBottom: 8 }}>Welcome to ContextCapture!</h3>
+            <p style={{ marginBottom: 16, color: "var(--text-secondary)" }}>
+              Start capturing by selecting text on the page, taking a screenshot, or adding a quick note.
             </p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, width: "100%", textAlign: "center" }}>
+              <div style={{ padding: "10px 6px", background: "var(--surface)", borderRadius: 8, border: "1px solid var(--border)" }}>
+                <div style={{ fontSize: 20 }}>📝</div>
+                <div style={{ fontSize: 11, fontWeight: 600, marginTop: 4 }}>Text &amp; Notes</div>
+              </div>
+              <div style={{ padding: "10px 6px", background: "var(--surface)", borderRadius: 8, border: "1px solid var(--border)" }}>
+                <div style={{ fontSize: 20 }}>📸</div>
+                <div style={{ fontSize: 11, fontWeight: 600, marginTop: 4 }}>Screenshots</div>
+              </div>
+              <div style={{ padding: "10px 6px", background: "var(--surface)", borderRadius: 8, border: "1px solid var(--border)" }}>
+                <div style={{ fontSize: 20 }}>🔗</div>
+                <div style={{ fontSize: 11, fontWeight: 600, marginTop: 4 }}>Links &amp; Pages</div>
+              </div>
+            </div>
           </div>
         ) : (
           captures.map((cap) => (

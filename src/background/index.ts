@@ -2,7 +2,7 @@ import { contextLifecycle } from "../core/context/lifecycle";
 import { capturePipeline } from "../core/capture/pipeline";
 import { messageRouter } from "./messageRouter";
 import { logger } from "../shared/logger";
-import { settingsStore } from "../data/settings";
+import { settingsStore, ensureDeviceId } from "../data/settings";
 import { initMeta } from "../data/db";
 
 chrome.runtime.onInstalled.addListener(async (details) => {
@@ -17,6 +17,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     const installId = crypto.randomUUID();
     await initMeta(deviceId, installId);
     await settingsStore.resetToDefaults();
+    await ensureDeviceId();
   }
 });
 

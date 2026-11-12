@@ -249,6 +249,17 @@ class CapturePipeline {
     const captureId = generateId();
     const now = nowISO();
     const searchText = normaliseSearchText([sourceTitle, sourceUrl, domain, note]);
+    const isDuplicate = !restricted && await this.checkDuplicateUrl(sourceUrl, contextId);
+
+    // Favicon URL from the tab if available
+    let faviconUrl: string | null = null;
+    if (tabId !== null) {
+      const tab = await this.getTabInfo(tabId);
+      faviconUrl = tab?.favIconUrl ?? null;
+    }
+    if (!faviconUrl && domain) {
+      faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+    }
 
     const capture: Capture = {
       capture_id: captureId,
@@ -260,6 +271,7 @@ class CapturePipeline {
       source_title: restricted ? null : sourceTitle,
       source_domain: restricted ? null : domain,
       favicon_data: null,
+      favicon_url: restricted ? null : faviconUrl,
       content_text: null,
       code_language: null,
       user_note: note ?? null,
@@ -270,6 +282,7 @@ class CapturePipeline {
       version: 1,
       owner_id: null,
       search_text: searchText,
+      duplicate_warning: isDuplicate,
     };
 
     await capRepo.create(capture);
@@ -450,7 +463,25 @@ class CapturePipeline {
   }
 
   private async getBlocklist(): Promise<string[]> {
-    return [];
+    const raw = await settingsStore.get("domain_blocklist");
+    if (!raw) return [];
+    return raw.split(",").map((d) => d.trim().toLowerCase()).filter(Boolean);
+  }
+
+  async isDomainBlocked(domain: string | null): Promise<boolean> {
+    if (!domain) return false;
+    const blocklist = await this.getBlocklist();
+    return blocklist.some((b) => domain.toLowerCase().includes(b));
+  }
+
+  private async checkDuplicateUrl(url: string | null, contextId: string): Promise<boolean> {
+    if (!url) return false;
+    try {
+      const existing = await capRepo.listAll({ limit: 50000 });
+      return existing.some((c) => c.source_url === url && c.deleted_at === null);
+    } catch {
+      return false;
+    }
   }
 
   private async createUnfiledContext(): Promise<string> {

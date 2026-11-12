@@ -1,5 +1,7 @@
-import { useState } from "preact/hooks";
-import { projects as projRepo } from "../../data/repositories";
+import { useState, useRef } from "preact/hooks";
+import { projects as projRepo, captures as capRepo } from "../../data/repositories";
+import { CaptureEditModal } from "./CaptureEditModal";
+import { Toast } from "./Toast";
 
 export function CaptureCard({
   capture,
@@ -10,11 +12,15 @@ export function CaptureCard({
   onDelete?: () => void;
   onEdit?: () => void;
 }) {
+  const [currentCapture, setCurrentCapture] = useState(capture);
   const [showProjectPicker, setShowProjectPicker] = useState(false);
   const [availableProjects, setAvailableProjects] = useState<any[]>([]);
   const [addedMsg, setAddedMsg] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteToast, setShowDeleteToast] = useState(false);
+  const deleteTimerRef = useRef<number | null>(null);
 
-  const typeLabel = capture.type.charAt(0).toUpperCase() + capture.type.slice(1);
+  const typeLabel = currentCapture.type.charAt(0).toUpperCase() + currentCapture.type.slice(1);
   const typeColors: Record<string, string> = {
     text: "#0071e3",
     code: "#34c759",
@@ -24,7 +30,7 @@ export function CaptureCard({
     screenshot: "#ff3b30",
   };
 
-  const tags: string[] = capture.tags || [];
+  const tags: string[] = currentCapture.tags || [];
 
   async function openPicker() {
     const projs = await projRepo.list();
@@ -33,33 +39,90 @@ export function CaptureCard({
   }
 
   async function addToProject(projectId: string) {
-    await projRepo.addCapture(projectId, capture.capture_id);
+    await projRepo.addCapture(projectId, currentCapture.capture_id);
     setShowProjectPicker(false);
     setAddedMsg("Added to project!");
     setTimeout(() => setAddedMsg(""), 2000);
   }
 
+  function handleDeleteClick() {
+    setShowDeleteToast(true);
+    deleteTimerRef.current = window.setTimeout(async () => {
+      setShowDeleteToast(false);
+      if (onDelete) {
+        onDelete();
+      } else {
+        await capRepo.softDelete(currentCapture.capture_id);
+      }
+    }, 10000);
+  }
+
+  function handleUndoDelete() {
+    if (deleteTimerRef.current) {
+      clearTimeout(deleteTimerRef.current);
+      deleteTimerRef.current = null;
+    }
+    setShowDeleteToast(false);
+  }
+
   return (
-    <div class="card" style={{ borderLeft: `3px solid ${typeColors[capture.type] || "#86868b"}` }}>
+    <div
+      class="card"
+      style={{
+        borderLeft: `3px solid ${typeColors[currentCapture.type] || "#86868b"}`,
+        opacity: showDeleteToast ? 0.4 : 1,
+        transition: "opacity 0.2s",
+      }}
+    >
       <span class="card-type-badge">{typeLabel}</span>
       <div class="card-content">
         <div class="card-title">
-          {capture.source_url ? (
-            <a href={capture.source_url} target="_blank" rel="noopener noreferrer">
-              {capture.source_title || capture.content_text?.slice(0, 60) || "Untitled"}
+          {currentCapture.source_url ? (
+            <a href={currentCapture.source_url} target="_blank" rel="noopener noreferrer">
+              {currentCapture.source_title || currentCapture.content_text?.slice(0, 60) || "Untitled"}
             </a>
           ) : (
-            capture.source_title || capture.content_text?.slice(0, 60) || "Untitled"
+            currentCapture.source_title || currentCapture.content_text?.slice(0, 60) || "Untitled"
           )}
         </div>
         <div class="card-meta">
-          {capture.source_domain && <span class="domain">{capture.source_domain}</span>}
-          <span>{new Date(capture.created_at).toLocaleDateString()}</span>
+          {currentCapture.favicon_url && (
+            <img
+              src={currentCapture.favicon_url}
+              alt=""
+              width={14}
+              height={14}
+              style={{ verticalAlign: "middle", marginRight: 4, borderRadius: 2 }}
+              onError={(e) => {
+                (e.currentTarget as HTMLElement).style.display = "none";
+              }}
+            />
+          )}
+          {currentCapture.source_domain && <span class="domain">{currentCapture.source_domain}</span>}
+          <span>{new Date(currentCapture.created_at).toLocaleDateString()}</span>
+          {currentCapture.duplicate_warning && (
+            <span
+              style={{
+                color: "var(--warning, #ff9500)",
+                fontSize: 11,
+                fontWeight: 600,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 2,
+              }}
+              title="A capture with this URL already exists in your library"
+            >
+              ⚠ Duplicate URL
+            </span>
+          )}
           {addedMsg && <span style={{ color: "var(--success)", fontWeight: 600 }}>{addedMsg}</span>}
         </div>
-        {capture.content_text && <div class="card-text">{capture.content_text}</div>}
-        {capture.code_language && (
-          <div class="code-block">{capture.content_text}</div>
+        {currentCapture.content_text && <div class="card-text">{currentCapture.content_text}</div>}
+        {currentCapture.code_language && (
+          <div class="code-block">{currentCapture.content_text}</div>
+        )}
+        {currentCapture.user_note && (
+          <div class="card-note">💬 {currentCapture.user_note}</div>
         )}
         <div class="card-tags">
           {tags.map((tag: string) => (
@@ -99,11 +162,61 @@ export function CaptureCard({
         )}
 
         <div class="card-actions">
-          <button class="btn-icon" onClick={openPicker} title="Add to Project">+ Project</button>
-          {onEdit && <button class="btn-icon" onClick={onEdit} title="Edit">&#9998;</button>}
-          {onDelete && <button class="btn-icon btn-danger" onClick={onDelete} title="Delete">&#10007;</button>}
+          <button class="btn-icon" onClick={openPicker} title="Add to Project" aria-label="Add to Project">
+            + Project
+          </button>
+          <button
+            class="btn-icon"
+            onClick={() => {
+              if (onEdit) onEdit();
+              else setIsEditing(true);
+            }}
+            title="Edit"
+            aria-label="Edit capture"
+          >
+            &#9998;
+          </button>
+          <button
+            class="btn-icon btn-danger"
+            onClick={handleDeleteClick}
+            title="Delete"
+            aria-label="Delete capture"
+          >
+            &#10007;
+          </button>
         </div>
       </div>
+
+      {isEditing && (
+        <CaptureEditModal
+          capture={currentCapture}
+          onClose={() => setIsEditing(false)}
+          onSave={(updated) => {
+            setCurrentCapture({
+              ...currentCapture,
+              ...updated,
+            });
+            setIsEditing(false);
+          }}
+        />
+      )}
+
+      {showDeleteToast && (
+        <Toast
+          message="Capture soft-deleted."
+          undoLabel="Undo"
+          durationMs={10000}
+          onUndo={handleUndoDelete}
+          onDismiss={async () => {
+            setShowDeleteToast(false);
+            if (onDelete) {
+              onDelete();
+            } else {
+              await capRepo.softDelete(currentCapture.capture_id);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

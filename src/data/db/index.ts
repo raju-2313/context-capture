@@ -57,7 +57,7 @@ export interface CCDatabaseSchema {
 }
 
 const DB_NAME = "cc";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 let dbInstance: IDBDatabase | null = null;
 
@@ -115,6 +115,13 @@ function openConnection(): Promise<IDBDatabase> {
         const pm = db.createObjectStore("project_memberships", { keyPath: ["project_id", "capture_id"] });
         pm.createIndex("by-project", "project_id");
         pm.createIndex("by-capture", "capture_id");
+      }
+      // v3: sync infrastructure stores
+      if (!db.objectStoreNames.contains("sync_records")) {
+        const sr = db.createObjectStore("sync_records", { keyPath: "record_id" });
+        sr.createIndex("by-entity", "entity_id");
+        sr.createIndex("by-status", "sync_status");
+        sr.createIndex("by-updated", "updated_at");
       }
     };
     req.onsuccess = () => resolve(req.result);

@@ -40,6 +40,10 @@ export interface Capture {
   version: number;
   owner_id: string | null;
   search_text: string | null;
+  duplicate_warning?: boolean;
+  favicon_url?: string | null;
+  attachment_ids?: string[];
+  tags?: string[];
 }
 
 export interface ContextRecord {
@@ -128,6 +132,26 @@ export interface ProjectMembershipRecord {
   item_note: string | null;
   added_at: string;
   deleted_at: string | null;
+}
+
+export interface SyncRecord {
+  record_id: string;
+  entity_type: "capture" | "context" | "project" | "tag";
+  entity_id: string;
+  sync_status: "pending" | "synced" | "conflict" | "failed";
+  updated_at: string;
+  checksum?: string;
+  owner_id?: string | null;
+}
+
+export interface ChangeJournalEntry {
+  journal_id: string;
+  entity_type: string;
+  entity_id: string;
+  operation: "create" | "update" | "delete";
+  diff: string;
+  timestamp: string;
+  device_id: string;
 }
 
 export interface TabBinding {

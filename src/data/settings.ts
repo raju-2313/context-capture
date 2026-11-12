@@ -35,3 +35,12 @@ export class ChromeSettingsStore implements SettingsStore {
 }
 
 export const settingsStore = new ChromeSettingsStore();
+
+/** Ensure a device_id is set on first install (used for future sync conflict resolution). */
+export async function ensureDeviceId(): Promise<string> {
+  const existing = await settingsStore.get("device_id");
+  if (existing) return existing;
+  const id = crypto.randomUUID();
+  await settingsStore.set("device_id", id);
+  return id;
+}
