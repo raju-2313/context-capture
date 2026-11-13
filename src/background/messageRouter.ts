@@ -5,13 +5,27 @@ import { ExtensionError } from "../shared/errors";
 import { logger } from "../shared/logger";
 
 export class MessageRouter {
+  private async resolveTabAndWindow(providedTabId?: number | null, providedWinId?: number | null, senderTab?: chrome.tabs.Tab): Promise<{ tabId: number; windowId: number }> {
+    let tabId = providedTabId || senderTab?.id || 0;
+    let windowId = providedWinId || senderTab?.windowId || 0;
+    if (!tabId || !windowId) {
+      try {
+        const [active] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (active?.id) {
+          if (!tabId) tabId = active.id;
+          if (!windowId && active.windowId) windowId = active.windowId;
+        }
+      } catch {}
+    }
+    return { tabId, windowId };
+  }
+
   async route(message: ExtensionMessage, _sender: chrome.runtime.MessageSender, sendResponse: (resp: ExtensionResponse) => void): Promise<boolean> {
     try {
       let result: any;
       switch (message.type) {
         case "CAPTURE_TEXT": {
-          const tabId = message.payload.tabId || _sender.tab?.id || 0;
-          const windowId = message.payload.windowId || _sender.tab?.windowId || 0;
+          const { tabId, windowId } = await this.resolveTabAndWindow(message.payload.tabId, message.payload.windowId, _sender.tab);
           result = await capturePipeline.captureText({
             ...message.payload,
             tabId,
@@ -20,31 +34,34 @@ export class MessageRouter {
           break;
         }
         case "CAPTURE_NOTE": {
-          const tabId = message.payload.tabId ?? _sender.tab?.id ?? null;
-          const windowId = message.payload.windowId ?? _sender.tab?.windowId ?? null;
+          const { tabId, windowId } = await this.resolveTabAndWindow(message.payload.tabId, message.payload.windowId, _sender.tab);
           result = await capturePipeline.captureNote({
             ...message.payload,
-            tabId,
-            windowId,
+            tabId: tabId || null,
+            windowId: windowId || null,
           });
           break;
         }
         case "CAPTURE_QUESTION": {
-          const tabId = message.payload.tabId ?? _sender.tab?.id ?? null;
-          const windowId = message.payload.windowId ?? _sender.tab?.windowId ?? null;
+          const { tabId, windowId } = await this.resolveTabAndWindow(message.payload.tabId, message.payload.windowId, _sender.tab);
           result = await capturePipeline.captureQuestion({
             ...message.payload,
-            tabId,
-            windowId,
+            tabId: tabId || null,
+            windowId: windowId || null,
           });
           break;
         }
-        case "CAPTURE_LINK":
-          result = await capturePipeline.captureLink(message.payload);
+        case "CAPTURE_LINK": {
+          const { tabId, windowId } = await this.resolveTabAndWindow(message.payload.tabId, message.payload.windowId, _sender.tab);
+          result = await capturePipeline.captureLink({
+            ...message.payload,
+            tabId: tabId || null,
+            windowId: windowId || null,
+          });
           break;
+        }
         case "CAPTURE_CODE": {
-          const tabId = message.payload.tabId || _sender.tab?.id || 0;
-          const windowId = message.payload.windowId || _sender.tab?.windowId || 0;
+          const { tabId, windowId } = await this.resolveTabAndWindow(message.payload.tabId, message.payload.windowId, _sender.tab);
           result = await capturePipeline.captureCode({
             ...message.payload,
             tabId,

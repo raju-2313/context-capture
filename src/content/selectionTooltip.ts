@@ -27,7 +27,7 @@
 
     hostEl = document.createElement("div");
     hostEl.id = HOST_ID;
-    hostEl.style.position = "absolute";
+    hostEl.style.position = "fixed";
     hostEl.style.top = "0px";
     hostEl.style.left = "0px";
     hostEl.style.width = "0px";
@@ -36,7 +36,7 @@
     hostEl.style.zIndex = "2147483647";
     hostEl.style.pointerEvents = "none";
 
-    document.documentElement.appendChild(hostEl);
+    (document.body || document.documentElement).appendChild(hostEl);
     shadowRoot = hostEl.attachShadow({ mode: "open" });
     shadowRoot.innerHTML = getStyles() + `<div id="cc-container" class="cc-container"></div>`;
     return shadowRoot;
@@ -62,7 +62,7 @@
         }
 
         .cc-container {
-          position: absolute;
+          position: fixed;
           pointer-events: auto;
           user-select: none;
           -webkit-user-select: none;
@@ -362,7 +362,11 @@
     }
     try {
       const range = sel.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
+      let rect = range.getBoundingClientRect();
+      if ((rect.width === 0 || rect.height === 0) && range.getClientRects().length > 0) {
+        const clientRects = range.getClientRects();
+        rect = clientRects[clientRects.length - 1];
+      }
       if (rect.width === 0 && rect.height === 0) {
         return { text: "", rect: null };
       }
@@ -373,23 +377,20 @@
   }
 
   function positionContainer(container: HTMLElement, rect: DOMRect) {
-    const scrollX = window.scrollX || window.pageXOffset;
-    const scrollY = window.scrollY || window.pageYOffset;
-
-    // Calculate center-bottom of selection
-    let left = rect.left + scrollX + rect.width / 2;
-    let top = rect.bottom + scrollY + 8;
+    // In viewport coordinates (using fixed positioning)
+    let left = rect.left + rect.width / 2;
+    let top = rect.bottom + 8;
 
     // If near bottom of viewport, place above
     const estimatedHeight = isExpanded ? 260 : 36;
     if (rect.bottom + estimatedHeight + 20 > window.innerHeight && rect.top > estimatedHeight + 20) {
-      top = rect.top + scrollY - estimatedHeight - 8;
+      top = rect.top - estimatedHeight - 8;
     }
 
     // Keep horizontal bounds within screen
     const estimatedWidth = isExpanded ? 270 : 90;
-    const minLeft = scrollX + 16;
-    const maxLeft = scrollX + window.innerWidth - estimatedWidth - 16;
+    const minLeft = 16;
+    const maxLeft = window.innerWidth - estimatedWidth - 16;
     left = Math.max(minLeft, Math.min(maxLeft, left - (isExpanded ? 135 : 45)));
 
     container.style.left = `${Math.round(left)}px`;
@@ -552,7 +553,7 @@
             id: crypto.randomUUID(),
             type: "CAPTURE_TEXT",
             timestamp: Date.now(),
-            payload: { text: textToCapture, tabId: 0, windowId: 0 },
+            payload: { text: textToCapture },
           });
           chrome.runtime.sendMessage({
             id: crypto.randomUUID(),
@@ -573,7 +574,7 @@
             id: crypto.randomUUID(),
             type: "CAPTURE_NOTE",
             timestamp: Date.now(),
-            payload: { text: textToCapture, tabId: null, windowId: null },
+            payload: { text: textToCapture },
           });
           chrome.runtime.sendMessage({
             id: crypto.randomUUID(),
@@ -594,7 +595,7 @@
             id: crypto.randomUUID(),
             type: "CAPTURE_QUESTION",
             timestamp: Date.now(),
-            payload: { text: textToCapture, tabId: null, windowId: null },
+            payload: { text: textToCapture },
           });
           chrome.runtime.sendMessage({
             id: crypto.randomUUID(),
@@ -735,4 +736,19 @@
       }
     }
   }, { passive: true });
+
+  // Listen for GET_SELECTION queries from popup
+  chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    if (msg?.type === "GET_SELECTION") {
+      const sel = window.getSelection();
+      sendResponse({ text: sel?.toString() || "" });
+      return true;
+    }
+  });
+
+  // Support GitHub Turbo, PJAX, and SPA dynamic DOM transitions
+  window.addEventListener("turbo:load", () => { hideTooltip(); });
+  window.addEventListener("turbo:render", () => { hideTooltip(); });
+  window.addEventListener("pjax:end", () => { hideTooltip(); });
+  window.addEventListener("popstate", () => { hideTooltip(); });
 })();

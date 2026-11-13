@@ -94,12 +94,12 @@ export default function QuickAdd() {
       if (type === "note") {
         await chrome.runtime.sendMessage({
           type: "CAPTURE_NOTE",
-          payload: { text, tabId: null, windowId: null },
+          payload: { text, tabId: tab?.id || null, windowId: tab?.windowId || null },
         });
       } else {
         await chrome.runtime.sendMessage({
           type: "CAPTURE_QUESTION",
-          payload: { text, tabId: null },
+          payload: { text, tabId: tab?.id || null, windowId: tab?.windowId || null },
         });
       }
       setSaved(true);

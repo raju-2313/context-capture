@@ -5,6 +5,7 @@
   "description": "Capture anything while browsing. Preserve tab context. Find it again. Local-first, no account.",
   "permissions": [
     "activeTab",
+    "tabs",
     "scripting",
     "contextMenus",
     "storage",
@@ -12,8 +13,9 @@
     "downloads",
     "offscreen"
   ],
-  "optional_permissions": [],
-  "host_permissions": [],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
