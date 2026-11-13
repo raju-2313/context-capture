@@ -12,11 +12,23 @@ import {
   QuestionIcon,
 } from "../../components/Icons";
 
+const RefreshIcon = ({ spinning }: { spinning: boolean }) => (
+  <svg
+    width="12" height="12" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+    style={{ animation: spinning ? "cc-spin 0.7s linear infinite" : "none", display: "block" }}
+  >
+    <polyline points="23 4 23 10 17 10"/>
+    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+  </svg>
+);
+
 export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) => void } = {}) {
   const [contextId, setContextId] = useState<string | null>(null);
   const [contextTitle, setContextTitle] = useState("New Context");
   const [captures, setCaptures] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [composerText, setComposerText] = useState("");
   const [composerType, setComposerType] = useState<"note" | "question">("note");
   const [savingComposer, setSavingComposer] = useState(false);
@@ -37,19 +49,34 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
       if (changeInfo.status === "complete") load();
     };
     const handleMessage = (msg: any) => {
-      if (msg?.type === "CAPTURE_SAVED" || msg?.type === "CONTEXT_CHANGED") load();
+      if (
+        msg?.type === "CAPTURE_SAVED" ||
+        msg?.type === "CAPTURE_DELETED" ||
+        msg?.type === "CONTEXT_CHANGED" ||
+        msg?.type === "CAPTURES_CHANGED"
+      ) load();
     };
 
     chrome.tabs.onActivated.addListener(handleActivated);
     chrome.tabs.onUpdated.addListener(handleUpdated);
     chrome.runtime.onMessage.addListener(handleMessage);
 
+    // 30-second polling fallback
+    const intervalId = setInterval(() => load(), 30000);
+
     return () => {
       chrome.tabs.onActivated.removeListener(handleActivated);
       chrome.tabs.onUpdated.removeListener(handleUpdated);
       chrome.runtime.onMessage.removeListener(handleMessage);
+      clearInterval(intervalId);
     };
   }, []);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  }
 
   async function load() {
     try {
@@ -167,10 +194,21 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
             {contextTitle.toUpperCase()}
           </span>
         </div>
-        <span class="tt-count-pill">
-          <span class="tt-count-dot" />
-          {captures.length} {captures.length === 1 ? "item" : "items"}
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span class="tt-count-pill">
+            <span class="tt-count-dot" />
+            {captures.length} {captures.length === 1 ? "item" : "items"}
+          </span>
+          <button
+            class="ctx-refresh-btn"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            title="Refresh tab context"
+            aria-label="Refresh tab context"
+          >
+            <RefreshIcon spinning={refreshing} />
+          </button>
+        </div>
       </div>
 
       {/* ── Section: Composer Card ── */}

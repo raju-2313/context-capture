@@ -5,6 +5,17 @@ import { CaptureCard } from "../../components/CaptureCard";
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { SearchIcon, TrashIcon } from "../../components/Icons";
 
+const RefreshIcon = ({ spinning }: { spinning: boolean }) => (
+  <svg
+    width="13" height="13" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+    style={{ animation: spinning ? "cc-spin 0.7s linear infinite" : "none", display: "block" }}
+  >
+    <polyline points="23 4 23 10 17 10"/>
+    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+  </svg>
+);
+
 type SortOrder = "newest" | "oldest" | "domain";
 const PAGE_SIZE = 50;
 
@@ -14,6 +25,7 @@ export default function AllCaptures({ onViewDetail }: { onViewDetail?: (id: stri
   const [filters, setFilters] = useState({ type: "", domain: "" });
   const [sort, setSort] = useState<SortOrder>("newest");
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(0);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false);
@@ -23,8 +35,29 @@ export default function AllCaptures({ onViewDetail }: { onViewDetail?: (id: stri
   useEffect(() => {
     load();
     (window as any).__focusAllSearch = () => searchRef.current?.focus();
-    return () => { delete (window as any).__focusAllSearch; };
+
+    const handleMsg = (msg: any) => {
+      if (msg?.type === "CAPTURE_SAVED" || msg?.type === "CAPTURE_DELETED" || msg?.type === "CAPTURES_CHANGED") {
+        load();
+      }
+    };
+    chrome.runtime.onMessage.addListener(handleMsg);
+
+    // 30-second polling fallback for edge-cases
+    const intervalId = setInterval(() => load(), 30000);
+
+    return () => {
+      delete (window as any).__focusAllSearch;
+      chrome.runtime.onMessage.removeListener(handleMsg);
+      clearInterval(intervalId);
+    };
   }, []);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  }
 
   async function load() {
     const all = await capRepo.listAll({ limit: 100000 });
@@ -196,11 +229,22 @@ export default function AllCaptures({ onViewDetail }: { onViewDetail?: (id: stri
           )}
         </div>
 
-        <span class="lib-count">
-          {allFiltered.length === 0
-            ? "No results"
-            : `Showing ${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, allFiltered.length)} of ${allFiltered.length}`}
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span class="lib-count">
+            {allFiltered.length === 0
+              ? "No results"
+              : `Showing ${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, allFiltered.length)} of ${allFiltered.length}`}
+          </span>
+          <button
+            class="ctx-refresh-btn"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            title="Refresh library"
+            aria-label="Refresh library"
+          >
+            <RefreshIcon spinning={refreshing} />
+          </button>
+        </div>
       </div>
 
       {/* ── Batch Action Bar ── */}

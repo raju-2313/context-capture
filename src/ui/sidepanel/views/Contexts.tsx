@@ -5,6 +5,17 @@ import { exportEngine } from "../../../core/export";
 import { MarkdownIcon, TrashIcon } from "../../components/Icons";
 import { ConfirmModal } from "../../components/ConfirmModal";
 
+const RefreshIcon = ({ spinning }: { spinning: boolean }) => (
+  <svg
+    width="13" height="13" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+    style={{ animation: spinning ? "cc-spin 0.7s linear infinite" : "none", display: "block" }}
+  >
+    <polyline points="23 4 23 10 17 10"/>
+    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+  </svg>
+);
+
 type View = "active" | "archived";
 
 export default function Contexts() {
@@ -22,8 +33,37 @@ export default function Contexts() {
   const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false);
   const [singleDeleteTarget, setSingleDeleteTarget] = useState<{ id: string; title: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+
+    const handleMsg = (msg: any) => {
+      if (
+        msg?.type === "CAPTURE_SAVED" ||
+        msg?.type === "CAPTURE_DELETED" ||
+        msg?.type === "CONTEXT_CHANGED" ||
+        msg?.type === "CAPTURES_CHANGED"
+      ) {
+        load();
+      }
+    };
+    chrome.runtime.onMessage.addListener(handleMsg);
+
+    // 30-second polling fallback
+    const intervalId = setInterval(() => load(), 30000);
+
+    return () => {
+      chrome.runtime.onMessage.removeListener(handleMsg);
+      clearInterval(intervalId);
+    };
+  }, []);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  }
 
   async function load() {
     try {
@@ -162,18 +202,29 @@ export default function Contexts() {
           </button>
         </div>
 
-        {list.length > 0 && (
-          <label style={{ display: "inline-flex", alignItems: "center", gap: 5, cursor: "pointer", paddingRight: 4 }}>
-            <input
-              type="checkbox"
-              class="item-checkbox"
-              checked={areAllSelected}
-              onChange={toggleSelectAll}
-              title="Select all contexts in view"
-            />
-            <span style={{ fontSize: 11, color: "#a1a1aa", fontWeight: 600 }}>All</span>
-          </label>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {list.length > 0 && (
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 5, cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                class="item-checkbox"
+                checked={areAllSelected}
+                onChange={toggleSelectAll}
+                title="Select all contexts in view"
+              />
+              <span style={{ fontSize: 11, color: "#a1a1aa", fontWeight: 600 }}>All</span>
+            </label>
+          )}
+          <button
+            class="ctx-refresh-btn"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            title="Refresh contexts"
+            aria-label="Refresh contexts"
+          >
+            <RefreshIcon spinning={refreshing} />
+          </button>
+        </div>
       </div>
 
       {/* ── Batch Selection Action Bar ── */}

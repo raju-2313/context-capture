@@ -15,6 +15,17 @@ const LayersIcon = ({ size = 12 }: { size?: number }) => (
   </svg>
 );
 
+const RefreshIcon = ({ spinning }: { spinning: boolean }) => (
+  <svg
+    width="13" height="13" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+    style={{ animation: spinning ? "cc-spin 0.7s linear infinite" : "none", display: "block" }}
+  >
+    <polyline points="23 4 23 10 17 10"/>
+    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+  </svg>
+);
+
 const ACCENT_COLORS = [
   { name: "Lime", hex: "#DFFF00" },
   { name: "Blue", hex: "#38bdf8" },
@@ -35,6 +46,7 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
   const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false);
   const [singleDeleteProjectTarget, setSingleDeleteProjectTarget] = useState<ProjectRecord | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Create form state
   const [showCreate, setShowCreate] = useState(false);
@@ -55,7 +67,32 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
 
   useEffect(() => {
     loadProjects();
+
+    const handleMsg = (msg: any) => {
+      if (
+        msg?.type === "CAPTURE_SAVED" ||
+        msg?.type === "CAPTURE_DELETED" ||
+        msg?.type === "CAPTURES_CHANGED"
+      ) {
+        loadProjects();
+      }
+    };
+    chrome.runtime.onMessage.addListener(handleMsg);
+
+    // 30-second polling fallback
+    const intervalId = setInterval(() => loadProjects(), 30000);
+
+    return () => {
+      chrome.runtime.onMessage.removeListener(handleMsg);
+      clearInterval(intervalId);
+    };
   }, []);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    await loadProjects();
+    setRefreshing(false);
+  }
 
   function showToast(msg: string) {
     setToastMessage(msg);
@@ -478,6 +515,17 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
               <span style={{ fontSize: 11, color: "#a1a1aa", fontWeight: 600 }}>All</span>
             </label>
           )}
+
+          <button
+            class="ctx-refresh-btn"
+            style={{ marginLeft: 4 }}
+            onClick={handleRefresh}
+            disabled={refreshing}
+            title="Refresh projects"
+            aria-label="Refresh projects"
+          >
+            <RefreshIcon spinning={refreshing} />
+          </button>
         </div>
 
         {showCreate ? (

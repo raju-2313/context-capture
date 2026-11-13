@@ -2500,6 +2500,37 @@ input:focus, select:focus, textarea:focus {
   color: #71717a;
 }
 
+/* ── Refresh Button ─────────────────────────────────────────── */
+.ctx-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+  color: #71717a;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+}
+.ctx-refresh-btn:hover {
+  color: #DFFF00;
+  background: rgba(223, 255, 0, 0.08);
+  border-color: rgba(223, 255, 0, 0.2);
+}
+.ctx-refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes cc-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 .ctx-merge-bar {
   display: flex;
   align-items: center;
