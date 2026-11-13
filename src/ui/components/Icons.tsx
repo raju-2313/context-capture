@@ -289,3 +289,51 @@ export function PlusIcon({ size = 14, class: cls, className, style, color = "cur
   );
 }
 
+export function ShieldIcon({ size = 16, class: cls, className, style, color = "currentColor" }: IconProps) {
+  return (
+    <svg width={size} height={size} class={cls || className} style={style} viewBox="0 0 24 24" fill="none" stroke={color} stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  );
+}
+
+export function DatabaseIcon({ size = 16, class: cls, className, style, color = "currentColor" }: IconProps) {
+  return (
+    <svg width={size} height={size} class={cls || className} style={style} viewBox="0 0 24 24" fill="none" stroke={color} stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <ellipse cx="12" cy="5" rx="9" ry="3" />
+      <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+      <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+    </svg>
+  );
+}
+
+export function UploadCloudIcon({ size = 16, class: cls, className, style, color = "currentColor" }: IconProps) {
+  return (
+    <svg width={size} height={size} class={cls || className} style={style} viewBox="0 0 24 24" fill="none" stroke={color} stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="16 16 12 12 8 16" />
+      <line x1="12" y1="12" x2="12" y2="21" />
+      <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+    </svg>
+  );
+}
+
+export function DownloadIcon({ size = 16, class: cls, className, style, color = "currentColor" }: IconProps) {
+  return (
+    <svg width={size} height={size} class={cls || className} style={style} viewBox="0 0 24 24" fill="none" stroke={color} stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
+
+export function RefreshIcon({ size = 14, class: cls, className, style, color = "currentColor" }: IconProps) {
+  return (
+    <svg width={size} height={size} class={cls || className} style={style} viewBox="0 0 24 24" fill="none" stroke={color} stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="23 4 23 10 17 10" />
+      <polyline points="1 20 1 14 7 14" />
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+    </svg>
+  );
+}
+
