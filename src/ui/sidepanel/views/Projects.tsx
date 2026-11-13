@@ -4,7 +4,8 @@ import { contextLifecycle } from "../../../core/context/lifecycle";
 import { ProjectRecord, Capture } from "../../../shared/types";
 import { CaptureCard } from "../../components/CaptureCard";
 import { exportEngine } from "../../../core/export";
-import { PlusIcon, ExportIcon, EditIcon, FolderIcon, CheckIcon, CloseIcon } from "../../components/Icons";
+import { PlusIcon, ExportIcon, EditIcon, FolderIcon, TrashIcon } from "../../components/Icons";
+import { ConfirmModal } from "../../components/ConfirmModal";
 
 const LayersIcon = ({ size = 12 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -28,6 +29,12 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
   const [selectedProject, setSelectedProject] = useState<ProjectRecord | null>(null);
   const [projectCaptures, setProjectCaptures] = useState<Capture[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Batch selection state
+  const [selectedProjects, setSelectedProjects] = useState<Set<string>>(new Set());
+  const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false);
+  const [singleDeleteProjectTarget, setSingleDeleteProjectTarget] = useState<ProjectRecord | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Create form state
   const [showCreate, setShowCreate] = useState(false);
@@ -73,6 +80,30 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
     } finally {
       setLoading(false);
     }
+  }
+
+  function toggleSelectProject(projectId: string) {
+    setSelectedProjects((prev) => {
+      const next = new Set(prev);
+      if (next.has(projectId)) next.delete(projectId);
+      else next.add(projectId);
+      return next;
+    });
+  }
+
+  function toggleSelectAllProjects() {
+    const allIds = projectList.map((p) => p.project_id);
+    const areAllSelected = allIds.length > 0 && allIds.every((id) => selectedProjects.has(id));
+
+    setSelectedProjects((prev) => {
+      const next = new Set(prev);
+      if (areAllSelected) {
+        for (const id of allIds) next.delete(id);
+      } else {
+        for (const id of allIds) next.add(id);
+      }
+      return next;
+    });
   }
 
   async function openProject(p: ProjectRecord) {
@@ -125,6 +156,39 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
     }
   }
 
+  async function handlePermanentDeleteSingle() {
+    if (!singleDeleteProjectTarget) return;
+    setDeleting(true);
+    try {
+      await projRepo.permanentDelete(singleDeleteProjectTarget.project_id);
+      const isViewingDeleted = selectedProject?.project_id === singleDeleteProjectTarget.project_id;
+      setSingleDeleteProjectTarget(null);
+      if (isViewingDeleted) setSelectedProject(null);
+      await loadProjects();
+      showToast("✓ Project permanently deleted");
+    } catch (err) {
+      console.error("Failed to delete project", err);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function handlePermanentDeleteBatch() {
+    if (selectedProjects.size === 0) return;
+    setDeleting(true);
+    try {
+      await projRepo.permanentDeleteMany(Array.from(selectedProjects));
+      setShowBatchDeleteConfirm(false);
+      setSelectedProjects(new Set());
+      await loadProjects();
+      showToast("✓ Selected projects permanently deleted");
+    } catch (err) {
+      console.error("Failed to batch delete projects", err);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   async function removeCapture(captureId: string) {
     if (!selectedProject) return;
     await projRepo.removeCapture(selectedProject.project_id, captureId);
@@ -152,7 +216,6 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
     setModalProject(p);
 
     try {
-      // 1. Query active tab context
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (tab?.id && tab?.windowId) {
         try {
@@ -171,7 +234,6 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
         setActiveTabContext(null);
       }
 
-      // 2. Query library contexts
       const allCtxs = await ctxRepo.list({ status: "active" });
       const ctxsWithCounts = await Promise.all(
         allCtxs.map(async (c: any) => {
@@ -253,6 +315,14 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
             >
               <ExportIcon size={12} /> Export MD
             </button>
+            <button
+              class="proj-cancel-btn cc-action-danger"
+              onClick={() => setSingleDeleteProjectTarget(selectedProject)}
+              title="Permanently delete project"
+              style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
+            >
+              <TrashIcon size={12} color="var(--danger)" /> Delete
+            </button>
           </div>
         </div>
 
@@ -313,7 +383,6 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
                 <button class="proj-modal-close" onClick={() => setModalProject(null)}>✕</button>
               </div>
 
-              {/* Active Tab Option */}
               {activeTabContext && (
                 <div>
                   <div class="proj-modal-section-title">ACTIVE TAB CONTEXT</div>
@@ -332,7 +401,6 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
                 </div>
               )}
 
-              {/* Library Contexts Option */}
               <div>
                 <div class="proj-modal-section-title">SAVED LIBRARY CONTEXTS</div>
                 {libraryContexts.length === 0 ? (
@@ -360,6 +428,18 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
           </div>
         )}
 
+        {/* Delete Confirmation Modal for Single Project */}
+        {singleDeleteProjectTarget && (
+          <ConfirmModal
+            isOpen={!!singleDeleteProjectTarget}
+            title={`Permanently Delete "${singleDeleteProjectTarget.title}"?`}
+            message="This project workspace and all its memberships will be permanently deleted. (Note: original captures remain in your library.)"
+            confirmLabel={deleting ? "Deleting…" : "Permanently Delete"}
+            onConfirm={handlePermanentDeleteSingle}
+            onCancel={() => setSingleDeleteProjectTarget(null)}
+          />
+        )}
+
         {/* Toast Feedback */}
         {toastMessage && <div class="proj-toast">{toastMessage}</div>}
 
@@ -375,6 +455,8 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
   /* ═══════════════════════════════════════════════════════════
      PROJECT LIST VIEW (Matching Reference Screenshot)
      ═══════════════════════════════════════════════════════════ */
+  const areAllProjectsSelected = projectList.length > 0 && projectList.every((p) => selectedProjects.has(p.project_id));
+
   return (
     <div class="tt-root">
       {/* ── Header ─────────────────────────────────────────── */}
@@ -383,7 +465,21 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
           <span class="proj-live-dot" />
           <span class="proj-title-text">PROJECTS</span>
           <span class="proj-count-badge">{projectList.length}</span>
+
+          {projectList.length > 0 && (
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 5, cursor: "pointer", marginLeft: 6 }}>
+              <input
+                type="checkbox"
+                class="item-checkbox"
+                checked={areAllProjectsSelected}
+                onChange={toggleSelectAllProjects}
+                title="Select all projects"
+              />
+              <span style={{ fontSize: 11, color: "#a1a1aa", fontWeight: 600 }}>All</span>
+            </label>
+          )}
         </div>
+
         {showCreate ? (
           <button class="proj-cancel-btn" onClick={() => setShowCreate(false)}>
             ✕ Cancel
@@ -395,7 +491,24 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
         )}
       </div>
 
-      {/* ── Create Project Form (Matches Reference Screenshot) ─ */}
+      {/* ── Batch Selection Bar ── */}
+      {selectedProjects.size > 0 && (
+        <div class="batch-bar">
+          <div class="batch-bar-left">
+            <span class="batch-bar-count">{selectedProjects.size} selected</span>
+          </div>
+          <div class="batch-bar-right">
+            <button class="batch-delete-btn" onClick={() => setShowBatchDeleteConfirm(true)}>
+              <TrashIcon size={12} color="#ffffff" /> Delete ({selectedProjects.size})
+            </button>
+            <button class="batch-cancel-btn" onClick={() => setSelectedProjects(new Set())}>
+              Deselect
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Create Project Form ─────────────────────────────── */}
       {showCreate && (
         <div class="proj-form-card">
           <div class="proj-form-group">
@@ -460,12 +573,25 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
             const count = projectCounts[p.project_id] ?? 0;
             const bannerColor = p.accent_color || "#DFFF00";
             const isEditing = editingProjectId === p.project_id;
+            const isSelected = selectedProjects.has(p.project_id);
 
             return (
               <div key={p.project_id} class="proj-card">
-                {/* Full-width top banner */}
+                {/* Full-width top banner with selection checkbox */}
                 <div class="proj-card-banner" style={{ background: bannerColor }}>
-                  <span class="proj-card-banner-title">PROJECT</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                    <input
+                      type="checkbox"
+                      class="item-checkbox"
+                      checked={isSelected}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        toggleSelectProject(p.project_id);
+                      }}
+                      aria-label={`Select project ${p.title}`}
+                    />
+                    <span class="proj-card-banner-title">PROJECT</span>
+                  </div>
                   <span class="proj-card-banner-items">{count} items</span>
                 </div>
 
@@ -526,6 +652,17 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
                           >
                             <EditIcon size={12} />
                           </button>
+
+                          <button
+                            class="proj-icon-btn cc-action-danger"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSingleDeleteProjectTarget(p);
+                            }}
+                            title="Permanently delete project"
+                          >
+                            <TrashIcon size={12} color="var(--danger)" />
+                          </button>
                         </div>
 
                         <span class="proj-date">
@@ -553,7 +690,6 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
               <button class="proj-modal-close" onClick={() => setModalProject(null)}>✕</button>
             </div>
 
-            {/* Active Tab Option */}
             {activeTabContext && (
               <div>
                 <div class="proj-modal-section-title">CURRENT TAB CONTEXT</div>
@@ -572,7 +708,6 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
               </div>
             )}
 
-            {/* Library Contexts Option */}
             <div>
               <div class="proj-modal-section-title">SAVED LIBRARY CONTEXTS</div>
               {libraryContexts.length === 0 ? (
@@ -599,6 +734,28 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
           </div>
         </div>
       )}
+
+      {/* ── Confirmation Modals ── */}
+      {singleDeleteProjectTarget && (
+        <ConfirmModal
+          isOpen={!!singleDeleteProjectTarget}
+          title={`Permanently Delete "${singleDeleteProjectTarget.title}"?`}
+          message="This project workspace and all its memberships will be permanently deleted. (Note: original captures remain in your library.)"
+          confirmLabel={deleting ? "Deleting…" : "Permanently Delete"}
+          onConfirm={handlePermanentDeleteSingle}
+          onCancel={() => setSingleDeleteProjectTarget(null)}
+        />
+      )}
+
+      <ConfirmModal
+        isOpen={showBatchDeleteConfirm}
+        title={`Permanently Delete ${selectedProjects.size} Project${selectedProjects.size === 1 ? "" : "s"}?`}
+        message="All selected projects and their memberships will be permanently deleted from local storage. (Original captures remain in your library.)"
+        itemCount={selectedProjects.size}
+        confirmLabel={deleting ? "Deleting…" : "Permanently Delete All"}
+        onConfirm={handlePermanentDeleteBatch}
+        onCancel={() => setShowBatchDeleteConfirm(false)}
+      />
 
       {/* Toast Feedback */}
       {toastMessage && <div class="proj-toast">{toastMessage}</div>}

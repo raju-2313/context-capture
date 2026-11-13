@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "preact/hooks";
 import { projects as projRepo, captures as capRepo, attachments as attRepo } from "../../data/repositories";
 import { CaptureEditModal } from "./CaptureEditModal";
-import { Toast } from "./Toast";
+import { ConfirmModal } from "./ConfirmModal";
 import { clipboardIntegration } from "../../core/integrations/clipboard";
 import { webhookIntegration } from "../../core/integrations/webhook";
 import {
@@ -32,22 +32,28 @@ export function CaptureCard({
   onDelete,
   onEdit,
   onViewDetail,
+  selected = false,
+  onToggleSelect,
+  showCheckbox = false,
 }: {
   capture: any;
   onDelete?: () => void;
   onEdit?: () => void;
   onViewDetail?: (captureId: string) => void;
+  selected?: boolean;
+  onToggleSelect?: (captureId: string) => void;
+  showCheckbox?: boolean;
 }) {
   const [currentCapture, setCurrentCapture] = useState(capture);
   const [showProjectPicker, setShowProjectPicker] = useState(false);
   const [availableProjects, setAvailableProjects] = useState<any[]>([]);
   const [addedMsg, setAddedMsg] = useState("");
   const [isEditing, setIsEditing] = useState(false);
-  const [showDeleteToast, setShowDeleteToast] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
   const [imageLoading, setImageLoading] = useState(false);
   const [showFullImageModal, setShowFullImageModal] = useState(false);
-  const deleteTimerRef = useRef<number | null>(null);
 
   useEffect(() => { setCurrentCapture(capture); }, [capture]);
 
@@ -100,24 +106,44 @@ export function CaptureCard({
     setTimeout(() => setAddedMsg(""), 2000);
   }
 
-  function handleDeleteClick() {
-    setShowDeleteToast(true);
-    deleteTimerRef.current = window.setTimeout(async () => {
-      setShowDeleteToast(false);
-      if (onDelete) onDelete();
-      else await capRepo.softDelete(currentCapture.capture_id);
-    }, 10000);
+  function handleDeleteClick(e: MouseEvent) {
+    e.stopPropagation();
+    setShowConfirmDelete(true);
   }
 
-  function handleUndoDelete() {
-    if (deleteTimerRef.current) { clearTimeout(deleteTimerRef.current); deleteTimerRef.current = null; }
-    setShowDeleteToast(false);
+  async function handleConfirmPermanentDelete() {
+    setDeleting(true);
+    try {
+      await capRepo.permanentDelete(currentCapture.capture_id);
+      setShowConfirmDelete(false);
+      if (onDelete) onDelete();
+    } catch (err) {
+      console.error("Failed to delete capture", err);
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
-    <div class="cc-card" style={{ opacity: showDeleteToast ? 0.4 : 1 }}>
-      {/* ── Type Banner ── */}
-      <div class="cc-card-banner">{typeLabel}</div>
+    <div class="cc-card">
+      {/* ── Type Banner with Selection Checkbox ── */}
+      <div class="cc-card-banner">
+        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          {(showCheckbox || onToggleSelect) && (
+            <input
+              type="checkbox"
+              class="item-checkbox"
+              checked={selected}
+              onChange={(e) => {
+                e.stopPropagation();
+                if (onToggleSelect) onToggleSelect(currentCapture.capture_id);
+              }}
+              aria-label={`Select capture ${currentCapture.capture_id}`}
+            />
+          )}
+          <span>{typeLabel}</span>
+        </div>
+      </div>
 
       {/* ── Card Body ── */}
       <div class="cc-card-body">
@@ -284,17 +310,14 @@ export function CaptureCard({
         />
       )}
 
-      {showDeleteToast && (
-        <Toast
-          message="Capture deleted."
-          undoLabel="Undo"
-          durationMs={10000}
-          onUndo={handleUndoDelete}
-          onDismiss={async () => {
-            setShowDeleteToast(false);
-            if (onDelete) onDelete();
-            else await capRepo.softDelete(currentCapture.capture_id);
-          }}
+      {showConfirmDelete && (
+        <ConfirmModal
+          isOpen={showConfirmDelete}
+          title="Permanently Delete Capture?"
+          message={`"${currentCapture.source_title || currentCapture.content_text?.slice(0, 50) || "This capture"}" will be permanently removed from your browser storage. This cannot be undone.`}
+          confirmLabel={deleting ? "Deleting…" : "Permanently Delete"}
+          onConfirm={handleConfirmPermanentDelete}
+          onCancel={() => setShowConfirmDelete(false)}
         />
       )}
 

@@ -1,4 +1,5 @@
 import { getDatabase, tx, objectStore } from "../db";
+import { captures } from "./captures";
 
 export class ContextRepository {
   async create(context: any): Promise<any> {
@@ -56,6 +57,23 @@ export class ContextRepository {
       objectStore(t, "contexts").put(record);
       return Promise.resolve();
     });
+  }
+
+  async permanentDelete(contextId: string): Promise<void> {
+    const contextCaps = await captures.listByContext(contextId);
+    for (const cap of contextCaps) {
+      await captures.permanentDelete(cap.capture_id);
+    }
+    await tx(["contexts"], "readwrite", (t) => {
+      objectStore(t, "contexts").delete(contextId);
+      return Promise.resolve();
+    });
+  }
+
+  async permanentDeleteMany(contextIds: string[]): Promise<void> {
+    for (const id of contextIds) {
+      await this.permanentDelete(id);
+    }
   }
 
   async count(): Promise<number> {

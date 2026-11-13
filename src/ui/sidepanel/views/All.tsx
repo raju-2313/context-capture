@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from "preact/hooks";
 import { captures as capRepo } from "../../../data/repositories";
 import { searchIndex } from "../../../core/search/index";
 import { CaptureCard } from "../../components/CaptureCard";
-import { SearchIcon } from "../../components/Icons";
+import { ConfirmModal } from "../../components/ConfirmModal";
+import { SearchIcon, TrashIcon } from "../../components/Icons";
 
 type SortOrder = "newest" | "oldest" | "domain";
 const PAGE_SIZE = 50;
@@ -14,6 +15,9 @@ export default function AllCaptures({ onViewDetail }: { onViewDetail?: (id: stri
   const [sort, setSort] = useState<SortOrder>("newest");
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false);
+  const [deletingBatch, setDeletingBatch] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -25,6 +29,7 @@ export default function AllCaptures({ onViewDetail }: { onViewDetail?: (id: stri
   async function load() {
     const all = await capRepo.listAll({ limit: 100000 });
     setCaptures(all);
+    setSelectedIds(new Set());
     await searchIndex.rebuild();
     setLoading(false);
   }
@@ -66,6 +71,54 @@ export default function AllCaptures({ onViewDetail }: { onViewDetail?: (id: stri
 
   function handleDelete(captureId: string) {
     setCaptures((prev) => prev.filter((c) => c.capture_id !== captureId));
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(captureId);
+      return next;
+    });
+  }
+
+  function toggleSelect(captureId: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(captureId)) next.delete(captureId);
+      else next.add(captureId);
+      return next;
+    });
+  }
+
+  function toggleSelectAllOnPage() {
+    const allPageIds = pageItems.map((c) => c.capture_id);
+    const areAllSelected = allPageIds.every((id) => selectedIds.has(id));
+
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (areAllSelected) {
+        for (const id of allPageIds) next.delete(id);
+      } else {
+        for (const id of allPageIds) next.add(id);
+      }
+      return next;
+    });
+  }
+
+  function selectAllFiltered() {
+    const allIds = allFiltered.map((c) => c.capture_id);
+    setSelectedIds(new Set(allIds));
+  }
+
+  async function handleBatchPermanentDelete() {
+    if (selectedIds.size === 0) return;
+    setDeletingBatch(true);
+    try {
+      await capRepo.permanentDeleteMany(Array.from(selectedIds));
+      setShowBatchDeleteConfirm(false);
+      await load();
+    } catch (err) {
+      console.error("Failed to delete captures batch", err);
+    } finally {
+      setDeletingBatch(false);
+    }
   }
 
   if (loading) return (
@@ -73,6 +126,8 @@ export default function AllCaptures({ onViewDetail }: { onViewDetail?: (id: stri
       <span class="sp-loading-dot" /><span class="sp-loading-dot" /><span class="sp-loading-dot" />
     </div>
   );
+
+  const areAllOnPageSelected = pageItems.length > 0 && pageItems.every((c) => selectedIds.has(c.capture_id));
 
   return (
     <div class="tt-root">
@@ -112,24 +167,61 @@ export default function AllCaptures({ onViewDetail }: { onViewDetail?: (id: stri
         </select>
       </div>
 
-      {/* ── Sort + meta row ── */}
+      {/* ── Sort + Meta Row with Select All ── */}
       <div class="lib-meta-row">
         <div class="lib-sort-group">
+          {pageItems.length > 0 && (
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 5, cursor: "pointer", marginRight: 4 }}>
+              <input
+                type="checkbox"
+                class="item-checkbox"
+                checked={areAllOnPageSelected}
+                onChange={toggleSelectAllOnPage}
+                title="Select all on this page"
+              />
+              <span style={{ fontSize: 11, color: "#a1a1aa", fontWeight: 600 }}>Select</span>
+            </label>
+          )}
+
           <select class="lib-sort-select" value={sort} onChange={(e) => { setSort(e.currentTarget.value as SortOrder); setPage(0); }}>
             <option value="newest">Newest first</option>
             <option value="oldest">Oldest first</option>
             <option value="domain">Domain A–Z</option>
           </select>
+
           {hasFilters && (
             <button class="lib-clear-btn" onClick={clearFilters}>Clear</button>
           )}
         </div>
+
         <span class="lib-count">
           {allFiltered.length === 0
             ? "No results"
             : `Showing ${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, allFiltered.length)} of ${allFiltered.length}`}
         </span>
       </div>
+
+      {/* ── Batch Action Bar ── */}
+      {selectedIds.size > 0 && (
+        <div class="batch-bar">
+          <div class="batch-bar-left">
+            <span class="batch-bar-count">{selectedIds.size} selected</span>
+            {selectedIds.size < allFiltered.length && (
+              <button class="batch-bar-select-all" onClick={selectAllFiltered}>
+                Select all {allFiltered.length}
+              </button>
+            )}
+          </div>
+          <div class="batch-bar-right">
+            <button class="batch-delete-btn" onClick={() => setShowBatchDeleteConfirm(true)}>
+              <TrashIcon size={12} color="#ffffff" /> Delete Selected ({selectedIds.size})
+            </button>
+            <button class="batch-cancel-btn" onClick={() => setSelectedIds(new Set())}>
+              Deselect
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Capture List ── */}
       {pageItems.length === 0 ? (
@@ -143,6 +235,9 @@ export default function AllCaptures({ onViewDetail }: { onViewDetail?: (id: stri
             <CaptureCard
               key={cap.capture_id}
               capture={cap}
+              selected={selectedIds.has(cap.capture_id)}
+              onToggleSelect={toggleSelect}
+              showCheckbox={true}
               onDelete={() => handleDelete(cap.capture_id)}
               onViewDetail={onViewDetail}
             />
@@ -162,6 +257,17 @@ export default function AllCaptures({ onViewDetail }: { onViewDetail?: (id: stri
           </button>
         </div>
       )}
+
+      {/* ── Confirmation Modal ── */}
+      <ConfirmModal
+        isOpen={showBatchDeleteConfirm}
+        title={`Permanently Delete ${selectedIds.size} Capture${selectedIds.size === 1 ? "" : "s"}?`}
+        message="All selected captures and their attachments will be permanently deleted from local storage. This action cannot be undone."
+        itemCount={selectedIds.size}
+        confirmLabel={deletingBatch ? "Deleting…" : "Permanently Delete"}
+        onConfirm={handleBatchPermanentDelete}
+        onCancel={() => setShowBatchDeleteConfirm(false)}
+      />
 
       {/* ── Status Bar ── */}
       <div class="tt-statusbar">

@@ -73,6 +73,29 @@ export class ProjectRepository {
     await this.update(projectId, { deleted_at: nowISO() });
   }
 
+  async permanentDelete(projectId: string): Promise<void> {
+    await tx(["projects", "project_memberships"], "readwrite", (t) => {
+      objectStore(t, "projects").delete(projectId);
+
+      const store = objectStore(t, "project_memberships");
+      const index = store.index("by-project");
+      const req = index.getAll(IDBKeyRange.only(projectId));
+      req.onsuccess = () => {
+        for (const m of (req.result || [])) {
+          store.delete([m.project_id, m.capture_id]);
+        }
+      };
+
+      return Promise.resolve();
+    });
+  }
+
+  async permanentDeleteMany(projectIds: string[]): Promise<void> {
+    for (const id of projectIds) {
+      await this.permanentDelete(id);
+    }
+  }
+
   async addCapture(projectId: string, captureId: string, itemNote?: string, section?: string): Promise<ProjectMembershipRecord> {
     const existing = await this.listMemberships(projectId);
     const existingMembership = existing.find((m) => m.capture_id === captureId && !m.deleted_at);

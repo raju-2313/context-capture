@@ -148,6 +148,42 @@ describe("Database layer", () => {
     const lastSeq = await journal.getLastSeq();
     expect(lastSeq).toBeGreaterThanOrEqual(2);
   });
+
+  it("permanently deletes captures, contexts, and cascades cleanly", async () => {
+    const ctxId = generateId();
+    await contexts.create({
+      context_id: ctxId,
+      title: "Context To Permanently Delete",
+      status: "active",
+      created_at: new Date().toISOString(),
+      last_active_at: new Date().toISOString(),
+      first_url: null,
+      last_url: null,
+      deleted_at: null,
+      version: 1,
+      owner_id: null,
+    });
+
+    const capId = generateId();
+    await captures.create({
+      capture_id: capId,
+      context_id: ctxId,
+      type: "note",
+      content_text: "Note to delete",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      source_domain: "example.com",
+    });
+
+    expect(await captures.get(capId)).not.toBeNull();
+    expect(await contexts.get(ctxId)).not.toBeNull();
+
+    // Permanent delete of context cascades to its captures
+    await contexts.permanentDelete(ctxId);
+
+    expect(await contexts.get(ctxId)).toBeNull();
+    expect(await captures.get(capId)).toBeNull();
+  });
 });
 
 describe("Utilities", () => {

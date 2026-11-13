@@ -65,6 +65,47 @@ export class CaptureRepository {
     });
   }
 
+  async permanentDelete(captureId: string): Promise<void> {
+    await tx(["captures", "capture_tags", "capture_attachments", "project_memberships"], "readwrite", (t) => {
+      objectStore(t, "captures").delete(captureId);
+
+      const ctStore = objectStore(t, "capture_tags");
+      const ctIndex = ctStore.index("by-capture");
+      const ctReq = ctIndex.getAll(IDBKeyRange.only(captureId));
+      ctReq.onsuccess = () => {
+        for (const row of (ctReq.result || [])) {
+          ctStore.delete([row.capture_id, row.tag_id]);
+        }
+      };
+
+      const caStore = objectStore(t, "capture_attachments");
+      const caIndex = caStore.index("by-capture");
+      const caReq = caIndex.getAll(IDBKeyRange.only(captureId));
+      caReq.onsuccess = () => {
+        for (const row of (caReq.result || [])) {
+          caStore.delete([row.capture_id, row.attachment_id]);
+        }
+      };
+
+      const pmStore = objectStore(t, "project_memberships");
+      const pmIndex = pmStore.index("by-capture");
+      const pmReq = pmIndex.getAll(IDBKeyRange.only(captureId));
+      pmReq.onsuccess = () => {
+        for (const row of (pmReq.result || [])) {
+          pmStore.delete([row.project_id, row.capture_id]);
+        }
+      };
+
+      return Promise.resolve();
+    });
+  }
+
+  async permanentDeleteMany(captureIds: string[]): Promise<void> {
+    for (const id of captureIds) {
+      await this.permanentDelete(id);
+    }
+  }
+
   async count(): Promise<number> {
     return tx(["captures"], "readonly", (t) => {
       return new Promise<number>((resolve) => {

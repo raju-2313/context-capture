@@ -2,6 +2,8 @@ import { useState, useEffect } from "preact/hooks";
 import { captures as capRepo, attachments as attRepo, contexts as ctxRepo } from "../../../data/repositories";
 import { Capture, ContextRecord } from "../../../shared/types";
 import { similarityEngine, RelatedCaptureResult } from "../../../core/search/similarity";
+import { ConfirmModal } from "../../components/ConfirmModal";
+import { TrashIcon } from "../../components/Icons";
 
 interface CaptureDetailProps {
   captureId: string;
@@ -20,6 +22,8 @@ export default function CaptureDetail({ captureId: initialCaptureId, onBack, onS
   const [related, setRelated] = useState<RelatedCaptureResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => { setActiveCaptureId(initialCaptureId); }, [initialCaptureId]);
 
@@ -97,19 +101,42 @@ export default function CaptureDetail({ captureId: initialCaptureId, onBack, onS
     </div>
   );
 
+  async function handlePermanentDelete() {
+    setDeleting(true);
+    try {
+      await capRepo.permanentDelete(activeCaptureId);
+      setShowConfirmDelete(false);
+      if (onBack) onBack();
+    } catch (err) {
+      console.error("Failed to delete capture", err);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   const typeLabel = (capture.type as string).toUpperCase();
 
   return (
     <div class="tt-root">
 
-      {/* ── Top Nav: Back + Type Badge ── */}
+      {/* ── Top Nav: Back + Delete + Type Badge ── */}
       <div class="det-topbar">
         {onBack && (
           <button class="det-back-btn" onClick={onBack} aria-label="Go back">
             ← Back
           </button>
         )}
-        <span class="det-type-badge">{typeLabel}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button
+            class="cc-action-btn cc-action-danger"
+            onClick={() => setShowConfirmDelete(true)}
+            title="Permanently delete capture"
+            style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px" }}
+          >
+            <TrashIcon size={12} color="var(--danger)" /> Delete
+          </button>
+          <span class="det-type-badge">{typeLabel}</span>
+        </div>
       </div>
 
       {/* ── Title & Domain ── */}
@@ -276,6 +303,16 @@ export default function CaptureDetail({ captureId: initialCaptureId, onBack, onS
           </div>
         </div>
       )}
+
+      {/* ── Confirmation Modal ── */}
+      <ConfirmModal
+        isOpen={showConfirmDelete}
+        title="Permanently Delete Capture?"
+        message={`"${capture.source_title || capture.content_text?.slice(0, 50) || "This capture"}" will be permanently removed from your browser storage. This action cannot be undone.`}
+        confirmLabel={deleting ? "Deleting…" : "Permanently Delete"}
+        onConfirm={handlePermanentDelete}
+        onCancel={() => setShowConfirmDelete(false)}
+      />
 
       {/* ── Status Bar ── */}
       <div class="tt-statusbar">

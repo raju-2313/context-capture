@@ -36,6 +36,11 @@ describe("Phase 2A: Projects Layer", () => {
     await projects.softDelete(project.project_id);
     const activeProjects = await projects.list();
     expect(activeProjects.some((p) => p.project_id === project.project_id)).toBe(false);
+
+    // Hard permanent delete
+    await projects.permanentDelete(project.project_id);
+    const hardDeleted = await projects.get(project.project_id);
+    expect(hardDeleted).toBeNull();
   });
 
   it("adds captures from different contexts to a project (many-to-many references)", async () => {

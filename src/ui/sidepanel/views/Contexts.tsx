@@ -1,8 +1,9 @@
 import { useState, useEffect } from "preact/hooks";
 import { contextLifecycle } from "../../../core/context/lifecycle";
-import { captures as capRepo } from "../../../data/repositories";
+import { captures as capRepo, contexts as ctxRepo } from "../../../data/repositories";
 import { exportEngine } from "../../../core/export";
-import { MarkdownIcon } from "../../components/Icons";
+import { MarkdownIcon, TrashIcon } from "../../components/Icons";
+import { ConfirmModal } from "../../components/ConfirmModal";
 
 type View = "active" | "archived";
 
@@ -16,6 +17,11 @@ export default function Contexts() {
   const [merging, setMerging] = useState(false);
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [captureCounts, setCaptureCounts] = useState<Record<string, number>>({});
+
+  // Permanent Delete states
+  const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false);
+  const [singleDeleteTarget, setSingleDeleteTarget] = useState<{ id: string; title: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => { load(); }, []);
 
@@ -38,6 +44,22 @@ export default function Contexts() {
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(ctxId)) next.delete(ctxId); else next.add(ctxId);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    const list = view === "active" ? active : archived;
+    const allIds = list.map((c) => c.context_id);
+    const areAllSelected = allIds.every((id) => selected.has(id));
+
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (areAllSelected) {
+        for (const id of allIds) next.delete(id);
+      } else {
+        for (const id of allIds) next.add(id);
+      }
       return next;
     });
   }
@@ -72,6 +94,35 @@ export default function Contexts() {
     finally { setMerging(false); }
   }
 
+  async function handlePermanentDeleteSingle() {
+    if (!singleDeleteTarget) return;
+    setDeleting(true);
+    try {
+      await ctxRepo.permanentDelete(singleDeleteTarget.id);
+      setSingleDeleteTarget(null);
+      await load();
+    } catch (err) {
+      console.error("Failed to delete context", err);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function handlePermanentDeleteBatch() {
+    if (selected.size === 0) return;
+    setDeleting(true);
+    try {
+      await ctxRepo.permanentDeleteMany(Array.from(selected));
+      setShowBatchDeleteConfirm(false);
+      setSelected(new Set());
+      await load();
+    } catch (err) {
+      console.error("Failed to batch delete contexts", err);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   async function exportContextMd(ctxId: string, ctxTitle: string) {
     setExportingId(ctxId);
     try {
@@ -92,25 +143,58 @@ export default function Contexts() {
 
   const list = view === "active" ? active : archived;
   const allList = [...active, ...archived];
+  const areAllSelected = list.length > 0 && list.every((c) => selected.has(c.context_id));
 
   return (
     <div class="tt-root">
-      {/* ── View Toggle ── */}
-      <div class="ctx-toggle-row">
-        <button class={`ctx-toggle-btn ${view === "active" ? "active" : ""}`} onClick={() => { setView("active"); setSelected(new Set()); }}>
-          Active
-          <span class="ctx-toggle-count">{active.length}</span>
-        </button>
-        <button class={`ctx-toggle-btn ${view === "archived" ? "active" : ""}`} onClick={() => { setView("archived"); setSelected(new Set()); }}>
-          Archived
-          <span class="ctx-toggle-count">{archived.length}</span>
-        </button>
+      {/* ── View Toggle & Select All Row ── */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
+        <div class="ctx-toggle-row" style={{ margin: 0, flex: 1 }}>
+          <button class={`ctx-toggle-btn ${view === "active" ? "active" : ""}`} onClick={() => { setView("active"); setSelected(new Set()); }}>
+            Active
+            <span class="ctx-toggle-count">{active.length}</span>
+          </button>
+          <button class={`ctx-toggle-btn ${view === "archived" ? "active" : ""}`} onClick={() => { setView("archived"); setSelected(new Set()); }}>
+            Archived
+            <span class="ctx-toggle-count">{archived.length}</span>
+          </button>
+        </div>
+
+        {list.length > 0 && (
+          <label style={{ display: "inline-flex", alignItems: "center", gap: 5, cursor: "pointer", paddingRight: 4 }}>
+            <input
+              type="checkbox"
+              class="item-checkbox"
+              checked={areAllSelected}
+              onChange={toggleSelectAll}
+              title="Select all contexts in view"
+            />
+            <span style={{ fontSize: 11, color: "#a1a1aa", fontWeight: 600 }}>All</span>
+          </label>
+        )}
       </div>
 
-      {/* ── Merge Toolbar ── */}
+      {/* ── Batch Selection Action Bar ── */}
+      {selected.size > 0 && (
+        <div class="batch-bar">
+          <div class="batch-bar-left">
+            <span class="batch-bar-count">{selected.size} selected</span>
+          </div>
+          <div class="batch-bar-right">
+            <button class="batch-delete-btn" onClick={() => setShowBatchDeleteConfirm(true)}>
+              <TrashIcon size={12} color="#ffffff" /> Delete ({selected.size})
+            </button>
+            <button class="batch-cancel-btn" onClick={() => setSelected(new Set())}>
+              Deselect
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Merge Toolbar (when 2+ selected) ── */}
       {selected.size >= 2 && (
         <div class="ctx-merge-bar">
-          <span class="ctx-merge-label">{selected.size} selected — merge into:</span>
+          <span class="ctx-merge-label">Merge {selected.size} into:</span>
           <select class="lib-select" value={mergeTarget} onChange={(e) => setMergeTarget(e.currentTarget.value)} style={{ flex: 1 }}>
             <option value="">Select target…</option>
             {allList.filter((ctx) => selected.has(ctx.context_id)).map((ctx) => (
@@ -120,12 +204,7 @@ export default function Contexts() {
           <button class="tt-submit-btn" onClick={handleMerge} disabled={!mergeTarget || merging}>
             {merging ? "Merging…" : "Merge"}
           </button>
-          <button class="ctx-cancel-btn" onClick={() => setSelected(new Set())}>Cancel</button>
         </div>
-      )}
-
-      {selected.size === 1 && (
-        <div class="ctx-merge-hint">Select at least 2 contexts to enable merge.</div>
       )}
 
       {/* ── Context List ── */}
@@ -148,7 +227,7 @@ export default function Contexts() {
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => toggleSelect(ctx.context_id)}
-                      class="ctx-checkbox"
+                      class="item-checkbox"
                       aria-label={`Select ${ctx.title}`}
                     />
                     <div class="cc-card-title" style={{ flex: 1 }}>{ctx.title}</div>
@@ -176,6 +255,13 @@ export default function Contexts() {
                         <MarkdownIcon size={12} />
                         {exportingId === ctx.context_id ? "Exporting…" : "MD"}
                       </button>
+                      <button
+                        class="cc-action-btn cc-action-danger"
+                        onClick={() => setSingleDeleteTarget({ id: ctx.context_id, title: ctx.title })}
+                        title="Permanently delete context"
+                      >
+                        <TrashIcon size={12} color="var(--danger)" />
+                      </button>
                     </div>
                     <span class="cc-action-date">
                       {new Date(ctx.last_active_at || ctx.created_at).toLocaleDateString()}
@@ -187,6 +273,28 @@ export default function Contexts() {
           })}
         </div>
       )}
+
+      {/* ── Confirmation Modals ── */}
+      {singleDeleteTarget && (
+        <ConfirmModal
+          isOpen={!!singleDeleteTarget}
+          title={`Permanently Delete "${singleDeleteTarget.title}"?`}
+          message="This context and all captures collected within it will be permanently removed from local storage. This action cannot be undone."
+          confirmLabel={deleting ? "Deleting…" : "Permanently Delete"}
+          onConfirm={handlePermanentDeleteSingle}
+          onCancel={() => setSingleDeleteTarget(null)}
+        />
+      )}
+
+      <ConfirmModal
+        isOpen={showBatchDeleteConfirm}
+        title={`Permanently Delete ${selected.size} Context${selected.size === 1 ? "" : "s"}?`}
+        message="All selected contexts and all of their captures will be permanently removed from local storage. This action cannot be undone."
+        itemCount={selected.size}
+        confirmLabel={deleting ? "Deleting…" : "Permanently Delete All"}
+        onConfirm={handlePermanentDeleteBatch}
+        onCancel={() => setShowBatchDeleteConfirm(false)}
+      />
 
       {/* ── Status Bar ── */}
       <div class="tt-statusbar">

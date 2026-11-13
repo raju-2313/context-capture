@@ -130,7 +130,7 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
   }
 
   async function deleteCapture(id: string) {
-    await capRepo.softDelete(id);
+    await capRepo.permanentDelete(id);
     await load();
   }
 
