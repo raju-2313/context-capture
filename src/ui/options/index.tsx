@@ -325,7 +325,7 @@ export default function Settings() {
               <div class="settings-card-header">
                 <div class="settings-card-title-group">
                   <h3 class="settings-card-title">
-                    <DatabaseIcon size={16} color="var(--ocean-blue-light)" /> Local Storage Health
+                    <DatabaseIcon size={16} color="var(--lime)" /> Local Storage Health
                   </h3>
                   <span class="settings-card-subtitle">
                     IndexedDB items stored entirely inside your browser on this machine
@@ -338,7 +338,7 @@ export default function Settings() {
                 <div class="stat-box">
                   <div class="stat-box-header">
                     <span>Captures</span>
-                    <NoteIcon size={14} color="var(--ocean-blue-light)" />
+                    <NoteIcon size={14} color="var(--lime)" />
                   </div>
                   <div class="stat-box-value">{storageInfo.captures}</div>
                   <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Notes, text &amp; questions</span>
@@ -347,7 +347,7 @@ export default function Settings() {
                 <div class="stat-box">
                   <div class="stat-box-header">
                     <span>Contexts</span>
-                    <FolderIcon size={14} color="var(--sunset-orange)" />
+                    <FolderIcon size={14} color="var(--lime)" />
                   </div>
                   <div class="stat-box-value">{storageInfo.contexts}</div>
                   <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Tab research sessions</span>
@@ -356,7 +356,7 @@ export default function Settings() {
                 <div class="stat-box">
                   <div class="stat-box-header">
                     <span>Media Attachments</span>
-                    <ScreenshotIcon size={14} color="var(--ocean-blue-light)" />
+                    <ScreenshotIcon size={14} color="var(--lime)" />
                   </div>
                   <div class="stat-box-value">{storageInfo.attachments}</div>
                   <span style={{ fontSize: 11, color: "var(--text-muted)" }}>Screenshots &amp; visual clips</span>
@@ -367,7 +367,7 @@ export default function Settings() {
               <div class="storage-meter-box">
                 <div class="storage-meter-label">
                   <span style={{ fontWeight: 600, color: "#ffffff" }}>Browser Storage Usage</span>
-                  <span style={{ color: "var(--ocean-blue-light)", fontWeight: 600 }}>
+                  <span style={{ color: "var(--lime)", fontWeight: 700 }}>
                     {storageInfo.usedMB} MB estimated
                   </span>
                 </div>
@@ -392,7 +392,7 @@ export default function Settings() {
                   border: "1px solid var(--border)",
                 }}
               >
-                <ShieldIcon size={14} color="var(--ocean-blue-light)" />
+                <ShieldIcon size={14} color="var(--lime)" />
                 <span>
                   All your data stays completely offline in your browser's private storage. No tracking pixels, cloud telemetry, or account sign-ins.
                 </span>
@@ -414,7 +414,7 @@ export default function Settings() {
                 <div>
                   <div style={{ fontWeight: 550, color: "#ffffff" }}>Interface Theme</div>
                   <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
-                    Ocean Blue + White + Sunset Orange craft palette
+                    Premium Obsidian Black + Cyber Chartreuse palette
                   </div>
                 </div>
                 <select
@@ -424,7 +424,7 @@ export default function Settings() {
                   style={{ minWidth: 120 }}
                 >
                   <option value="auto">Auto (System)</option>
-                  <option value="dark">Ocean Dark</option>
+                  <option value="dark">Obsidian Dark</option>
                   <option value="light">Clean Light</option>
                 </select>
               </div>
@@ -439,7 +439,7 @@ export default function Settings() {
               <div class="settings-card-header">
                 <div class="settings-card-title-group">
                   <h3 class="settings-card-title">
-                    <ZipIcon size={16} color="var(--ocean-blue-light)" /> Export Library
+                    <ZipIcon size={16} color="var(--lime)" /> Export Library
                   </h3>
                   <span class="settings-card-subtitle">
                     Download full archives, structured notes, or backups without vendor lock-in
@@ -475,7 +475,7 @@ export default function Settings() {
                 {/* Card 2: Obsidian Vault */}
                 <div class="export-item-card">
                   <div class="export-item-header">
-                    <div class="export-icon-box" style={{ color: "var(--ocean-blue-light)" }}>
+                    <div class="export-icon-box" style={{ color: "var(--lime)" }}>
                       <ObsidianIcon size={18} />
                     </div>
                     <div class="export-item-info">
@@ -594,7 +594,7 @@ export default function Settings() {
               <div class="settings-card-header">
                 <div class="settings-card-title-group">
                   <h3 class="settings-card-title">
-                    <UploadCloudIcon size={16} color="var(--ocean-blue-light)" /> Restore &amp; Import
+                    <UploadCloudIcon size={16} color="var(--lime)" /> Restore &amp; Import
                   </h3>
                   <span class="settings-card-subtitle">
                     Restore a previously exported ContextCapture JSON backup file
@@ -603,7 +603,7 @@ export default function Settings() {
               </div>
 
               <div class="import-dropzone" onClick={handleImportBackup}>
-                <UploadCloudIcon size={28} color="var(--ocean-blue-light)" />
+                <UploadCloudIcon size={28} color="var(--lime)" />
                 <div style={{ fontWeight: 600, color: "#ffffff", fontSize: 13 }}>
                   Click to select backup file (.json)
                 </div>
@@ -621,21 +621,21 @@ export default function Settings() {
                     fontSize: 12,
                     background:
                       importStatus.phase === "error"
-                        ? "var(--sunset-orange-subtle)"
+                        ? "rgba(239, 68, 68, 0.1)"
                         : importStatus.phase === "done"
-                        ? "var(--ocean-blue-subtle)"
+                        ? "rgba(223, 255, 0, 0.1)"
                         : "var(--surface)",
                     color:
                       importStatus.phase === "error"
-                        ? "var(--sunset-orange)"
+                        ? "#ef4444"
                         : importStatus.phase === "done"
-                        ? "var(--ocean-blue-light)"
+                        ? "var(--lime)"
                         : "var(--text)",
                     border: `1px solid ${
                       importStatus.phase === "error"
-                        ? "rgba(255, 107, 53, 0.4)"
+                        ? "rgba(239, 68, 68, 0.3)"
                         : importStatus.phase === "done"
-                        ? "rgba(2, 132, 199, 0.4)"
+                        ? "rgba(223, 255, 0, 0.3)"
                         : "var(--border)"
                     }`,
                   }}
@@ -654,7 +654,7 @@ export default function Settings() {
               <div class="settings-card-header">
                 <div class="settings-card-title-group">
                   <h3 class="settings-card-title">
-                    <ShieldIcon size={16} color="var(--ocean-blue-light)" /> Privacy Safeguards
+                    <ShieldIcon size={16} color="var(--lime)" /> Privacy Safeguards
                   </h3>
                   <span class="settings-card-subtitle">
                     Configure URL cleaning and incognito session behaviors
@@ -755,7 +755,7 @@ export default function Settings() {
               <div class="settings-card-header">
                 <div class="settings-card-title-group">
                   <h3 class="settings-card-title">
-                    <SparklesIcon size={16} color="var(--ocean-blue-light)" /> Grounded AI Knowledge Assistant
+                    <SparklesIcon size={16} color="var(--lime)" /> Grounded AI Knowledge Assistant
                   </h3>
                   <span class="settings-card-subtitle">
                     Local synthesis engine that answers questions strictly citing your saved library
@@ -794,7 +794,7 @@ export default function Settings() {
                   marginTop: 12,
                 }}
               >
-                <SparklesIcon size={14} color="var(--ocean-blue-light)" />
+                <SparklesIcon size={14} color="var(--lime)" />
                 <span>
                   Answers are grounded strictly in your captures and never sent to external servers without explicit confirmation.
                 </span>
@@ -836,7 +836,7 @@ export default function Settings() {
                 </div>
 
                 {webhookTestStatus && (
-                  <div style={{ fontSize: 12, color: "var(--ocean-blue-light)", fontWeight: 500 }}>
+                  <div style={{ fontSize: 12, color: "var(--lime)", fontWeight: 600 }}>
                     {webhookTestStatus}
                   </div>
                 )}
@@ -872,7 +872,7 @@ export default function Settings() {
                   href="https://github.com/raju-2313/context-capture"
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ color: "var(--ocean-blue-light)", textDecoration: "none", fontWeight: 500 }}
+                  style={{ color: "var(--lime)", textDecoration: "none", fontWeight: 600 }}
                 >
                   raju-2313/context-capture ↗
                 </a>
@@ -887,7 +887,7 @@ export default function Settings() {
                   <CopyIcon size={13} /> Copy Diagnostic Report
                 </button>
                 {copyFeedback && (
-                  <span style={{ fontSize: 12, color: "var(--ocean-blue-light)", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  <span style={{ fontSize: 12, color: "var(--lime)", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}>
                     <CheckIcon size={13} /> {copyFeedback}
                   </span>
                 )}
