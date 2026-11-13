@@ -19,17 +19,14 @@ export default function CaptureDetail({ captureId: initialCaptureId, onBack, onS
   const [noteSavedMsg, setNoteSavedMsg] = useState<string>("");
   const [related, setRelated] = useState<RelatedCaptureResult[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    setActiveCaptureId(initialCaptureId);
-  }, [initialCaptureId]);
+  useEffect(() => { setActiveCaptureId(initialCaptureId); }, [initialCaptureId]);
 
   useEffect(() => {
     loadCapture();
     return () => {
-      if (screenshotUrl && screenshotUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(screenshotUrl);
-      }
+      if (screenshotUrl?.startsWith("blob:")) URL.revokeObjectURL(screenshotUrl);
     };
   }, [activeCaptureId]);
 
@@ -37,10 +34,7 @@ export default function CaptureDetail({ captureId: initialCaptureId, onBack, onS
     setLoading(true);
     try {
       const cap = await capRepo.get(activeCaptureId);
-      if (!cap) {
-        setLoading(false);
-        return;
-      }
+      if (!cap) { setLoading(false); return; }
       setCapture(cap);
       setUserNote(cap.user_note || "");
 
@@ -50,22 +44,16 @@ export default function CaptureDetail({ captureId: initialCaptureId, onBack, onS
       }
 
       let blob: Blob | null = null;
-      if (cap.attachment_ids && cap.attachment_ids.length > 0) {
+      if (cap.attachment_ids?.length > 0) {
         const att = await attRepo.get(cap.attachment_ids[0]);
         blob = att?.blob || att?.data_blob || null;
       }
       if (!blob) {
         const atts = await attRepo.getAttachmentsForCapture(cap.capture_id);
-        if (atts && atts.length > 0) {
-          blob = atts[0]?.blob || atts[0]?.data_blob || null;
-        }
+        blob = atts?.[0]?.blob || atts?.[0]?.data_blob || null;
       }
-      if (blob) {
-        const url = URL.createObjectURL(blob);
-        setScreenshotUrl(url);
-      }
+      if (blob) setScreenshotUrl(URL.createObjectURL(blob));
 
-      // Find related captures
       similarityEngine.findRelated(activeCaptureId, 4).then(setRelated).catch(() => {});
     } catch (e) {
       console.error("Failed to load capture detail", e);
@@ -86,181 +74,215 @@ export default function CaptureDetail({ captureId: initialCaptureId, onBack, onS
     setTimeout(() => setNoteSavedMsg(""), 2000);
   }
 
-  if (loading) {
-    return <div class="empty-state">Loading capture details...</div>;
+  function copyUrl() {
+    if (!capture?.source_url) return;
+    navigator.clipboard.writeText(capture.source_url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    });
   }
 
-  if (!capture) {
-    return (
-      <div class="view-container">
-        <div class="empty-state">
-          <h3>Capture not found</h3>
-          {onBack && (
-            <button class="btn btn-primary" onClick={onBack} style={{ marginTop: 12 }}>
-              &larr; Back
-            </button>
-          )}
-        </div>
+  if (loading) return (
+    <div class="sp-loading">
+      <span class="sp-loading-dot" /><span class="sp-loading-dot" /><span class="sp-loading-dot" />
+    </div>
+  );
+
+  if (!capture) return (
+    <div class="tt-root">
+      <div class="tt-empty">
+        <div class="tt-ready-badge" style={{ borderStyle: "dashed" }}>Capture not found</div>
+        {onBack && <button class="cc-action-btn" onClick={onBack}>← Back</button>}
       </div>
-    );
-  }
+    </div>
+  );
+
+  const typeLabel = (capture.type as string).toUpperCase();
 
   return (
-    <div class="view-container">
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+    <div class="tt-root">
+
+      {/* ── Top Nav: Back + Type Badge ── */}
+      <div class="det-topbar">
         {onBack && (
-          <button class="btn" onClick={onBack} style={{ padding: "4px 10px" }} aria-label="Back">
-            &larr; Back
+          <button class="det-back-btn" onClick={onBack} aria-label="Go back">
+            ← Back
           </button>
         )}
-        <h3 style={{ fontSize: 16, fontWeight: 600, flex: 1, margin: 0 }}>
-          {capture.source_title || "Capture Detail"}
-        </h3>
-        <span class={`card-type-badge badge-${capture.type}`}>{capture.type}</span>
+        <span class="det-type-badge">{typeLabel}</span>
       </div>
 
+      {/* ── Title & Domain ── */}
+      <div class="det-hero">
+        <h2 class="det-title">
+          {capture.source_title || capture.content_text?.slice(0, 80) || "Untitled Capture"}
+        </h2>
+        {capture.source_domain && (
+          <div class="det-domain">
+            {capture.favicon_url && (
+              <img
+                src={capture.favicon_url}
+                alt=""
+                width={13} height={13}
+                style={{ borderRadius: 2 }}
+                onError={(e) => { (e.currentTarget as HTMLElement).style.display = "none"; }}
+              />
+            )}
+            {capture.source_domain}
+          </div>
+        )}
+      </div>
+
+      {/* ── Screenshot ── */}
       {screenshotUrl && (
-        <div style={{ marginBottom: 16, border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden" }}>
-          <img
-            src={screenshotUrl}
-            alt="Capture Screenshot"
-            style={{ width: "100%", maxHeight: 300, objectFit: "contain", display: "block", background: "#000" }}
-          />
+        <div class="det-screenshot">
+          <img src={screenshotUrl} alt={capture.source_title || "Screenshot"} class="det-screenshot-img" />
         </div>
       )}
 
+      {/* ── Capture Preview ── */}
       {capture.content_text && (
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", textTransform: "uppercase" }}>
-            Content
-          </label>
+        <div class="det-section">
+          <div class="det-section-label">Capture Preview</div>
           {capture.code_language ? (
-            <pre class="code-block" style={{ marginTop: 4 }}>
-              <code>{capture.content_text}</code>
-            </pre>
+            <pre class="det-code-block"><code>{capture.content_text}</code></pre>
           ) : (
-            <div
-              style={{
-                marginTop: 4,
-                padding: 12,
-                background: "var(--surface)",
-                borderRadius: 8,
-                border: "1px solid var(--border)",
-                whiteSpace: "pre-wrap",
-                fontSize: 13,
-                lineHeight: 1.6,
-              }}
-            >
-              {capture.content_text}
+            <div class="det-preview-box">
+              {capture.content_text.length === 0
+                ? <span class="det-preview-empty">No preview text available for <strong>this item.</strong></span>
+                : capture.content_text}
             </div>
           )}
         </div>
       )}
 
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <label style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", textTransform: "uppercase" }}>
-            Personal Note
-          </label>
-          {noteSavedMsg && <span style={{ color: "var(--ocean-blue-light)", fontSize: 11, fontWeight: 600 }}>{noteSavedMsg}</span>}
+      {/* Show empty preview state for link types with no text */}
+      {!capture.content_text && capture.type !== "screenshot" && (
+        <div class="det-section">
+          <div class="det-section-label">Capture Preview</div>
+          <div class="det-preview-box">
+            <span class="det-preview-empty">No preview text available for <strong>this item.</strong></span>
+          </div>
         </div>
-        <textarea
-          class="input"
-          rows={3}
-          value={userNote}
-          onInput={(e) => setUserNote(e.currentTarget.value)}
-          placeholder="Add your note or insight..."
-          style={{ width: "100%", marginTop: 4, resize: "vertical" }}
-        />
-        <div style={{ marginTop: 6, display: "flex", justifyContent: "flex-end" }}>
-          <button class="btn btn-primary" onClick={handleSaveNote} disabled={savingNote} style={{ padding: "4px 12px", fontSize: 12 }}>
-            {savingNote ? "Saving..." : "Save Note"}
-          </button>
+      )}
+
+      {/* ── Personal Note ── */}
+      <div class="det-section">
+        <div class="det-section-label">
+          Personal Note
+          {noteSavedMsg && <span class="det-saved-msg">{noteSavedMsg}</span>}
+        </div>
+        <div class="det-note-card">
+          <textarea
+            class="det-note-textarea"
+            rows={4}
+            value={userNote}
+            onInput={(e) => setUserNote(e.currentTarget.value)}
+            placeholder="Add your note or insight..."
+          />
+          <div class="det-note-footer">
+            <span class="det-char-count">{userNote.length} characters</span>
+            <button class="det-save-btn" onClick={handleSaveNote} disabled={savingNote}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+              </svg>
+              {savingNote ? "Saving..." : "Save Note"}
+            </button>
+          </div>
         </div>
       </div>
 
-      <div class="settings-section" style={{ marginTop: 8 }}>
-        <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-secondary)", marginBottom: 8 }}>
-          Metadata
-        </h4>
-        {capture.source_url && (
-          <div class="setting-row" style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-            <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>URL</span>
-            <a
-              href={capture.source_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ fontSize: 12, maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-            >
-              {capture.source_url}
-            </a>
-          </div>
-        )}
-        {context && (
-          <div class="setting-row" style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>Context</span>
-            <span style={{ fontSize: 12, fontWeight: 500 }}>{context.title}</span>
-          </div>
-        )}
-        <div class="setting-row" style={{ display: "flex", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>Captured At</span>
-          <span style={{ fontSize: 12 }}>{new Date(capture.created_at).toLocaleString()}</span>
-        </div>
-        {capture.tags && capture.tags.length > 0 && (
-          <div class="setting-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>Tags</span>
-            <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-              {capture.tags.map((t) => (
-                <span key={t} class="tag">#{t}</span>
-              ))}
+      {/* ── Metadata ── */}
+      <div class="det-section">
+        <div class="det-section-label">Metadata</div>
+        <div class="det-meta-table">
+          {capture.source_url && (
+            <div class="det-meta-row">
+              <span class="det-meta-key">URL</span>
+              <div class="det-meta-val det-url-row">
+                <a href={capture.source_url} target="_blank" rel="noopener noreferrer" class="det-url-link">
+                  {capture.source_url}
+                </a>
+                <button class="det-copy-url" onClick={copyUrl} title="Copy URL">
+                  {copied ? (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  ) : (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
+          )}
+          {context && (
+            <div class="det-meta-row">
+              <span class="det-meta-key">Context</span>
+              <span class="det-meta-badge">{context.title}</span>
+            </div>
+          )}
+          <div class="det-meta-row">
+            <span class="det-meta-key">Captured At</span>
+            <span class="det-meta-val det-date">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style={{ flexShrink: 0 }}>
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              {new Date(capture.created_at).toLocaleString("en-US", {
+                month: "numeric", day: "numeric", year: "numeric",
+                hour: "numeric", minute: "2-digit", hour12: true
+              })}
+            </span>
           </div>
-        )}
+          {capture.tags && capture.tags.length > 0 && (
+            <div class="det-meta-row">
+              <span class="det-meta-key">Tags</span>
+              <div class="det-meta-val" style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                {capture.tags.map((t) => <span key={t} class="cc-tag">#{t}</span>)}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
+      {/* ── Related Captures ── */}
       {related.length > 0 && (
-        <div class="settings-section" style={{ marginTop: 16 }}>
-          <h4 style={{ fontSize: 12, textTransform: "uppercase", color: "var(--text-secondary)", marginBottom: 8 }}>
-            🔗 Related Captures ({related.length})
-          </h4>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div class="det-section">
+          <div class="det-section-label">Related Captures</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {related.map(({ capture: rel, score, commonTerms }) => (
               <div
                 key={rel.capture_id}
-                class="card"
-                style={{
-                  cursor: "pointer",
-                  margin: 0,
-                  padding: 10,
-                  transition: "border-color 0.15s",
-                }}
+                class="det-related-card"
                 onClick={() => {
                   if (onSelectCapture) onSelectCapture(rel.capture_id);
                   else setActiveCaptureId(rel.capture_id);
                 }}
-                title="Click to view this related capture"
               >
-                <div class="card-content">
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span class="card-type-badge">{rel.type}</span>
-                    <span style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)" }}>
-                      {Math.round(score * 100)}% match
-                    </span>
-                  </div>
-                  <div class="card-title" style={{ marginTop: 4 }}>
-                    {rel.source_title || rel.content_text?.slice(0, 60) || "Untitled"}
-                  </div>
-                  {commonTerms.length > 0 && (
-                    <div style={{ fontSize: 10, color: "var(--text-secondary)", marginTop: 2 }}>
-                      Shared: {commonTerms.join(", ")}
-                    </div>
-                  )}
+                <div class="det-related-top">
+                  <span class="det-type-badge" style={{ fontSize: 9 }}>{rel.type.toUpperCase()}</span>
+                  <span class="det-match-pct">{Math.round(score * 100)}% match</span>
                 </div>
+                <div class="det-related-title">
+                  {rel.source_title || rel.content_text?.slice(0, 60) || "Untitled"}
+                </div>
+                {commonTerms.length > 0 && (
+                  <div class="det-related-shared">Shared: {commonTerms.join(", ")}</div>
+                )}
               </div>
             ))}
           </div>
         </div>
       )}
+
+      {/* ── Status Bar ── */}
+      <div class="tt-statusbar">
+        <span class="tt-status-left"><span class="tt-status-dot" /> Cloud Sync Connected</span>
+        <span class="tt-status-right">v2.4 Pro</span>
+      </div>
+
     </div>
   );
 }

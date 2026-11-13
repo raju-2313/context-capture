@@ -2568,3 +2568,336 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   flex-direction: column;
 }
+
+
+/* ═══════════════════════════════════════════════════════
+   DETAIL VIEW (Detail.tsx)
+═══════════════════════════════════════════════════════ */
+
+/* ── Top nav bar ── */
+.det-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.det-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #ffffff;
+  background: #111114;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.13s ease;
+}
+.det-back-btn:hover {
+  background: #18181d;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.det-type-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  background: var(--lime);
+  color: #000000;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+/* ── Hero title + domain ── */
+.det-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.det-title {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  line-height: 1.35;
+  word-break: break-word;
+  margin: 0;
+}
+
+.det-domain {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: var(--lime);
+  font-weight: 500;
+}
+
+/* ── Screenshot ── */
+.det-screenshot {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9px;
+  overflow: hidden;
+  background: #000;
+}
+.det-screenshot-img {
+  width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  display: block;
+}
+
+/* ── Section label ── */
+.det-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.det-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #52525b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.det-saved-msg {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--lime);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ── Capture Preview Box ── */
+.det-preview-box {
+  background: #0d0d10;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #a1a1aa;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.det-preview-empty {
+  color: #71717a;
+  font-style: italic;
+  font-family: inherit;
+}
+.det-preview-empty strong {
+  color: #a1a1aa;
+  font-style: normal;
+}
+
+.det-code-block {
+  background: #0d0d10;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: #e6edf3;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+/* ── Personal Note Card ── */
+.det-note-card {
+  background: #0d0d10;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 9px;
+  overflow: hidden;
+  transition: border-color 0.14s ease;
+}
+.det-note-card:focus-within {
+  border-color: rgba(223, 255, 0, 0.4);
+}
+
+.det-note-textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 12.5px;
+  font-family: inherit;
+  line-height: 1.6;
+  padding: 12px 14px 8px;
+  resize: none;
+  display: block;
+}
+.det-note-textarea::placeholder { color: #52525b; }
+
+.det-note-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px 9px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.det-char-count {
+  font-size: 10px;
+  color: #3f3f46;
+}
+
+.det-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 13px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  background: var(--lime);
+  color: #000000;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.13s ease, transform 0.1s ease;
+}
+.det-save-btn:hover:not(:disabled) {
+  background: #ccee00;
+  transform: translateY(-1px);
+}
+.det-save-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Metadata Table ── */
+.det-meta-table {
+  background: #0d0d10;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 9px;
+  overflow: hidden;
+}
+
+.det-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.det-meta-row:last-child { border-bottom: none; }
+
+.det-meta-key {
+  font-size: 12px;
+  color: #71717a;
+  flex-shrink: 0;
+  min-width: 72px;
+}
+
+.det-meta-val {
+  font-size: 12px;
+  color: #ffffff;
+  text-align: right;
+  flex: 1;
+  min-width: 0;
+}
+
+.det-url-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.det-url-link {
+  color: var(--lime);
+  font-size: 12px;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+}
+.det-url-link:hover { text-decoration: underline; }
+
+.det-copy-url {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  color: #71717a;
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.12s ease, background 0.12s ease;
+}
+.det-copy-url:hover { color: #fff; background: rgba(255,255,255,0.1); }
+
+.det-meta-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(223, 255, 0, 0.1);
+  color: var(--lime);
+  border: 1px solid rgba(223, 255, 0, 0.25);
+  border-radius: 6px;
+}
+
+.det-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #a1a1aa;
+  font-size: 12px;
+}
+
+/* ── Related Captures ── */
+.det-related-card {
+  background: #0d0d10;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: border-color 0.13s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.det-related-card:hover { border-color: rgba(223, 255, 0, 0.3); }
+
+.det-related-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.det-match-pct {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--lime);
+}
+
+.det-related-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.4;
+}
+
+.det-related-shared {
+  font-size: 10.5px;
+  color: #52525b;
+}
