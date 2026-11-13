@@ -76,6 +76,7 @@ export default function AllCaptures({ onViewDetail }: { onViewDetail?: (id: stri
       next.delete(captureId);
       return next;
     });
+    try { chrome.runtime?.sendMessage?.({ type: "CAPTURE_DELETED" }); } catch {}
   }
 
   function toggleSelect(captureId: string) {
@@ -113,6 +114,7 @@ export default function AllCaptures({ onViewDetail }: { onViewDetail?: (id: stri
     try {
       await capRepo.permanentDeleteMany(Array.from(selectedIds));
       setShowBatchDeleteConfirm(false);
+      try { chrome.runtime?.sendMessage?.({ type: "CAPTURE_DELETED" }); } catch {}
       await load();
     } catch (err) {
       console.error("Failed to delete captures batch", err);

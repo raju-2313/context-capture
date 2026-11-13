@@ -70,7 +70,7 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
       const counts: Record<string, number> = {};
       await Promise.all(
         list.map(async (p) => {
-          const caps = await projRepo.listMemberships(p.project_id);
+          const caps = await projRepo.listCaptures(p.project_id);
           counts[p.project_id] = caps.length;
         })
       );

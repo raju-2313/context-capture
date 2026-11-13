@@ -46,7 +46,7 @@ export class ProjectRepository {
         req.onsuccess = () => {
           let results = req.result || [];
           if (!options?.includeDeleted) {
-            results = results.filter((r: any) => r.deleted_at === null);
+            results = results.filter((r: any) => !r.deleted_at);
           }
           resolve(results.sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()));
         };
@@ -179,8 +179,11 @@ export class ProjectRepository {
   async count(): Promise<number> {
     return tx(["projects"], "readonly", (t) => {
       return new Promise<number>((resolve) => {
-        const req = objectStore(t, "projects").count();
-        req.onsuccess = () => resolve(req.result);
+        const req = objectStore(t, "projects").getAll();
+        req.onsuccess = () => {
+          const nonDeleted = (req.result || []).filter((r: any) => !r.deleted_at);
+          resolve(nonDeleted.length);
+        };
       });
     });
   }

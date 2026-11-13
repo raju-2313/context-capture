@@ -105,6 +105,7 @@ export default function CaptureDetail({ captureId: initialCaptureId, onBack, onS
     setDeleting(true);
     try {
       await capRepo.permanentDelete(activeCaptureId);
+      try { chrome.runtime?.sendMessage?.({ type: "CAPTURE_DELETED" }); } catch {}
       setShowConfirmDelete(false);
       if (onBack) onBack();
     } catch (err) {

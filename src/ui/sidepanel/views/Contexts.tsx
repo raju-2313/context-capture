@@ -100,6 +100,7 @@ export default function Contexts() {
     try {
       await ctxRepo.permanentDelete(singleDeleteTarget.id);
       setSingleDeleteTarget(null);
+      try { chrome.runtime?.sendMessage?.({ type: "CAPTURE_DELETED" }); } catch {}
       await load();
     } catch (err) {
       console.error("Failed to delete context", err);
@@ -115,6 +116,7 @@ export default function Contexts() {
       await ctxRepo.permanentDeleteMany(Array.from(selected));
       setShowBatchDeleteConfirm(false);
       setSelected(new Set());
+      try { chrome.runtime?.sendMessage?.({ type: "CAPTURE_DELETED" }); } catch {}
       await load();
     } catch (err) {
       console.error("Failed to batch delete contexts", err);
@@ -219,7 +221,7 @@ export default function Contexts() {
             return (
               <div key={ctx.context_id} class={`ctx-card ${isSelected ? "selected" : ""}`}>
                 {/* Banner = status */}
-                <div class="cc-card-banner">{ctx.status.toUpperCase()}</div>
+                <div class="cc-card-banner">{(ctx.status || view).toUpperCase()}</div>
 
                 <div class="cc-card-body">
                   <div class="ctx-card-top">

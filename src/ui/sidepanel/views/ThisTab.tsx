@@ -131,6 +131,7 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
 
   async function deleteCapture(id: string) {
     await capRepo.permanentDelete(id);
+    try { chrome.runtime?.sendMessage?.({ type: "CAPTURE_DELETED" }); } catch {}
     await load();
   }
 

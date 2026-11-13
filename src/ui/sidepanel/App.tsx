@@ -48,10 +48,15 @@ export default function SidePanelApp() {
     return () => document.removeEventListener("keydown", handleKeydown);
   }, []);
 
+  // Refresh count whenever active tab changes
+  useEffect(() => {
+    capRepo.count().then(setCaptureCount).catch(() => {});
+  }, [activeTab, detailCaptureId]);
+
   // Refresh count when captures change or handle navigation
   useEffect(() => {
     const handleMsg = (msg: any) => {
-      if (msg?.type === "CAPTURE_SAVED") {
+      if (msg?.type === "CAPTURE_SAVED" || msg?.type === "CAPTURE_DELETED" || msg?.type === "CAPTURES_CHANGED") {
         capRepo.count().then(setCaptureCount).catch(() => {});
       } else if (msg?.type === "NAVIGATE_PANEL") {
         if (msg.targetTab) {

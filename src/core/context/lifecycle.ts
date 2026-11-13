@@ -5,8 +5,8 @@ export interface ContextLifecycle {
   unbindTab(tabId: number): Promise<void>;
   archiveContext(contextId: string): Promise<void>;
   restoreContext(contextId: string): Promise<void>;
-  listActive(): Promise<Array<{ context_id: string; title: string; capture_count: number; last_url: string | null; last_active_at: string }>>;
-  listArchived(): Promise<Array<{ context_id: string; title: string; capture_count: number; last_url: string | null; last_active_at: string }>>;
+  listActive(): Promise<Array<{ context_id: string; title: string; status: "active" | "archived"; capture_count: number; last_url: string | null; last_active_at: string; created_at?: string }>>;
+  listArchived(): Promise<Array<{ context_id: string; title: string; status: "active" | "archived"; capture_count: number; last_url: string | null; last_active_at: string; created_at?: string }>>;
   renameContext(contextId: string, title: string): Promise<void>;
   deleteContext(contextId: string): Promise<void>;
   mergeContexts(sourceId: string, targetId: string): Promise<void>;
@@ -79,7 +79,7 @@ class ContextLifecycleImpl implements ContextLifecycle {
     await ctxRepo.update(contextId, { status: "active" });
   }
 
-  async listActive(): Promise<Array<{ context_id: string; title: string; capture_count: number; last_url: string | null; last_active_at: string }>> {
+  async listActive(): Promise<Array<{ context_id: string; title: string; status: "active" | "archived"; capture_count: number; last_url: string | null; last_active_at: string; created_at?: string }>> {
     const all = await ctxRepo.list({ status: "active" });
     const result = [];
     for (const ctx of all) {
@@ -87,15 +87,17 @@ class ContextLifecycleImpl implements ContextLifecycle {
       result.push({
         context_id: ctx.context_id,
         title: ctx.title,
+        status: (ctx.status || "active") as "active" | "archived",
         capture_count: count,
         last_url: ctx.last_url,
         last_active_at: ctx.last_active_at,
+        created_at: ctx.created_at,
       });
     }
     return result.sort((a, b) => new Date(b.last_active_at).getTime() - new Date(a.last_active_at).getTime());
   }
 
-  async listArchived(): Promise<Array<{ context_id: string; title: string; capture_count: number; last_url: string | null; last_active_at: string }>> {
+  async listArchived(): Promise<Array<{ context_id: string; title: string; status: "active" | "archived"; capture_count: number; last_url: string | null; last_active_at: string; created_at?: string }>> {
     const all = await ctxRepo.list({ status: "archived" });
     const result = [];
     for (const ctx of all) {
@@ -103,9 +105,11 @@ class ContextLifecycleImpl implements ContextLifecycle {
       result.push({
         context_id: ctx.context_id,
         title: ctx.title,
+        status: (ctx.status || "archived") as "active" | "archived",
         capture_count: count,
         last_url: ctx.last_url,
         last_active_at: ctx.last_active_at,
+        created_at: ctx.created_at,
       });
     }
     return result.sort((a, b) => new Date(b.last_active_at).getTime() - new Date(a.last_active_at).getTime());

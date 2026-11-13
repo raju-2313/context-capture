@@ -24,7 +24,7 @@ export class CaptureRepository {
       const index = objectStore(t, "captures").index("by-context");
       return new Promise<any[]>((resolve) => {
         const req = index.getAll(IDBKeyRange.only(contextId));
-        req.onsuccess = () => resolve((req.result || []).filter((c: any) => c.deleted_at === null));
+        req.onsuccess = () => resolve((req.result || []).filter((c: any) => !c.deleted_at));
       });
     });
   }
@@ -34,7 +34,7 @@ export class CaptureRepository {
       return new Promise<any[]>((resolve) => {
         const req = objectStore(t, "captures").getAll();
         req.onsuccess = () => {
-          let results = (req.result || []).filter((c: any) => c.deleted_at === null);
+          let results = (req.result || []).filter((c: any) => !c.deleted_at);
           results.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
           if (options?.offset) results.splice(0, options.offset);
           if (options?.limit) results.splice(options.limit);
@@ -109,8 +109,11 @@ export class CaptureRepository {
   async count(): Promise<number> {
     return tx(["captures"], "readonly", (t) => {
       return new Promise<number>((resolve) => {
-        const req = objectStore(t, "captures").count();
-        req.onsuccess = () => resolve(req.result);
+        const req = objectStore(t, "captures").getAll();
+        req.onsuccess = () => {
+          const nonDeleted = (req.result || []).filter((c: any) => !c.deleted_at);
+          resolve(nonDeleted.length);
+        };
       });
     });
   }

@@ -1,6 +1,8 @@
 import { useState, useEffect } from "preact/hooks";
 import { render } from "preact/compat";
 import { ScreenshotIcon, BookmarkIcon, ExpandIcon, NoteIcon, QuestionIcon } from "../components/Icons";
+import { captures as capRepo, contexts as ctxRepo } from "../../data/repositories";
+import { sessionStore } from "../../data/sessionStore";
 
 // ── tiny inline icons (no extra file deps) ──────────────────────────────────
 const IcoAsk = () => (
@@ -53,8 +55,8 @@ export default function QuickAdd() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    // Load active tab info
-    chrome.tabs.query({ active: true, currentWindow: true }).then(([t]) => {
+    // Load active tab info and context
+    chrome.tabs.query({ active: true, currentWindow: true }).then(async ([t]) => {
       if (t?.url) {
         try {
           const u = new URL(t.url);
@@ -69,14 +71,20 @@ export default function QuickAdd() {
           setTab({ title: t.title || "Untitled", url: t.url || "", domain: "", id: t.id, windowId: t.windowId });
         }
       }
+
+      if (t?.id) {
+        try {
+          const binding = await sessionStore.getBinding(t.id);
+          if (binding?.context_id) {
+            const ctx = await ctxRepo.get(binding.context_id);
+            if (ctx?.title) setContextName(ctx.title);
+          }
+        } catch {}
+      }
     });
 
-    // Load stats from storage
-    chrome.storage.local.get(["captures", "contexts", "activeContextName"]).then((data) => {
-      const captures = data["captures"] || [];
-      setCaptureCount(Array.isArray(captures) ? captures.length : 0);
-      setContextName(data["activeContextName"] || "New Context");
-    });
+    // Load real capture count
+    capRepo.count().then(setCaptureCount).catch(() => {});
   }, []);
 
   async function save() {

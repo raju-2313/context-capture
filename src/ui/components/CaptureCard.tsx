@@ -115,6 +115,7 @@ export function CaptureCard({
     setDeleting(true);
     try {
       await capRepo.permanentDelete(currentCapture.capture_id);
+      try { chrome.runtime?.sendMessage?.({ type: "CAPTURE_DELETED" }); } catch {}
       setShowConfirmDelete(false);
       if (onDelete) onDelete();
     } catch (err) {

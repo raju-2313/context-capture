@@ -30,7 +30,7 @@ export class ContextRepository {
         req.onsuccess = () => {
           let results = req.result || [];
           if (!options?.includeDeleted) {
-            results = results.filter((r: any) => r.deleted_at === null);
+            results = results.filter((r: any) => !r.deleted_at);
           }
           resolve(results);
         };
@@ -79,8 +79,11 @@ export class ContextRepository {
   async count(): Promise<number> {
     return tx(["contexts"], "readonly", (t) => {
       return new Promise<number>((resolve) => {
-        const req = objectStore(t, "contexts").count();
-        req.onsuccess = () => resolve(req.result);
+        const req = objectStore(t, "contexts").getAll();
+        req.onsuccess = () => {
+          const nonDeleted = (req.result || []).filter((r: any) => !r.deleted_at);
+          resolve(nonDeleted.length);
+        };
       });
     });
   }
