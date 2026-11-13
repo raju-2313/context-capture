@@ -11,52 +11,35 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
   const [projectCaptures, setProjectCaptures] = useState<Capture[]>([]);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadProjects();
-  }, []);
+  useEffect(() => { loadProjects(); }, []);
 
   async function loadProjects() {
-    try {
-      const all = await projRepo.list();
-      setProjectList(all);
-    } catch (e) {
-      console.error("Failed to load projects", e);
-    } finally {
-      setLoading(false);
-    }
+    try { setProjectList(await projRepo.list()); }
+    catch (e) { console.error("Failed to load projects", e); }
+    finally { setLoading(false); }
   }
 
   async function openProject(p: ProjectRecord) {
-    setSelectedProject(p);
-    setLoading(true);
-    try {
-      const caps = await projRepo.listCaptures(p.project_id);
-      setProjectCaptures(caps);
-    } catch (e) {
-      console.error("Failed to load project captures", e);
-    } finally {
-      setLoading(false);
-    }
+    setSelectedProject(p); setLoading(true);
+    try { setProjectCaptures(await projRepo.listCaptures(p.project_id)); }
+    catch (e) { console.error("Failed to load project captures", e); }
+    finally { setLoading(false); }
   }
 
   async function createProject() {
     if (!newTitle.trim()) return;
     const p = await projRepo.create({ title: newTitle, description: newDesc });
-    setNewTitle("");
-    setNewDesc("");
-    setShowCreateModal(false);
-    await loadProjects();
-    await openProject(p);
+    setNewTitle(""); setNewDesc(""); setShowCreate(false);
+    await loadProjects(); await openProject(p);
   }
 
   async function removeCapture(captureId: string) {
     if (!selectedProject) return;
     await projRepo.removeCapture(selectedProject.project_id, captureId);
-    const updated = await projRepo.listCaptures(selectedProject.project_id);
-    setProjectCaptures(updated);
+    setProjectCaptures(await projRepo.listCaptures(selectedProject.project_id));
   }
 
   async function exportProject() {
@@ -67,120 +50,136 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
     const a = document.createElement("a");
     a.href = url;
     a.download = `${selectedProject.title.toLowerCase().replace(/[^a-z0-9]/g, "-")}-export.md`;
-    a.click();
-    URL.revokeObjectURL(url);
+    a.click(); URL.revokeObjectURL(url);
   }
 
-  if (loading) return <div class="empty-state">Loading projects...</div>;
+  if (loading) return (
+    <div class="sp-loading">
+      <span class="sp-loading-dot" /><span class="sp-loading-dot" /><span class="sp-loading-dot" />
+    </div>
+  );
 
-  // Selected Project Detail View
+  /* ── Project Detail ── */
   if (selectedProject) {
     return (
-      <div class="view-container">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-          <button class="btn btn-icon" onClick={() => { setSelectedProject(null); loadProjects(); }}>
-            &larr; All Projects
+      <div class="tt-root">
+        <div class="proj-detail-header">
+          <button class="cc-action-btn" style={{ gap: 4 }} onClick={() => { setSelectedProject(null); loadProjects(); }}>
+            ← All Projects
           </button>
-          <button class="btn btn-primary" onClick={exportProject} disabled={projectCaptures.length === 0} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-            <ExportIcon size={14} /> Export Markdown
+          <button
+            class="tt-submit-btn"
+            onClick={exportProject}
+            disabled={projectCaptures.length === 0}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+          >
+            <ExportIcon size={13} /> Export MD
           </button>
         </div>
 
-        <div class="context-header" style={{ marginBottom: 16 }}>
-          <div class="context-title">{selectedProject.title}</div>
+        <div class="cc-card-banner">{selectedProject.title.toUpperCase()}</div>
+        <div class="cc-card-body" style={{ paddingTop: 10 }}>
           {selectedProject.description && (
-            <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 4 }}>
+            <p class="tt-empty-desc" style={{ textAlign: "left", maxWidth: "none", marginBottom: 4 }}>
               {selectedProject.description}
-            </div>
+            </p>
           )}
-          <div class="context-meta" style={{ marginTop: 6 }}>
-            {projectCaptures.length} captures curated
-          </div>
+          <div class="cc-card-domain">{projectCaptures.length} captures curated</div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {projectCaptures.length === 0 ? (
-            <div class="empty-state" style={{ height: "auto" }}>
-              <p>No captures added to this project yet.</p>
-              <p style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 6 }}>
-                Open any capture in "This Tab" or "All" and click "+ Project" to add it here.
-              </p>
-            </div>
-          ) : (
-            projectCaptures.map((cap) => (
+        {projectCaptures.length === 0 ? (
+          <div class="tt-empty" style={{ paddingTop: 20 }}>
+            <div class="tt-ready-badge" style={{ borderStyle: "dashed" }}>No captures yet</div>
+            <p class="tt-empty-desc">Open any capture in Tab or Library and click "+ Project" to add it here.</p>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+            {projectCaptures.map((cap) => (
               <CaptureCard
                 key={cap.capture_id}
                 capture={cap}
                 onDelete={() => removeCapture(cap.capture_id)}
                 onViewDetail={onViewDetail}
               />
-            ))
-          )}
+            ))}
+          </div>
+        )}
+
+        <div class="tt-statusbar">
+          <span class="tt-status-left"><span class="tt-status-dot" /> Sync Active</span>
+          <span class="tt-status-right">v2.4</span>
         </div>
       </div>
     );
   }
 
-  // Projects List View
+  /* ── Project List ── */
   return (
-    <div class="view-container">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <h3 style={{ fontSize: 14 }}>Projects ({projectList.length})</h3>
-        <button class="btn btn-primary" onClick={() => setShowCreateModal(!showCreateModal)} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-          <PlusIcon size={12} /> {showCreateModal ? "Cancel" : "New Project"}
+    <div class="tt-root">
+      <div class="proj-list-header">
+        <div class="tt-context-label">
+          <span class="tt-live-dot" />
+          <span class="tt-context-name">PROJECTS</span>
+        </div>
+        <button class="tt-submit-btn" onClick={() => setShowCreate(!showCreate)} style={{ display: "inline-flex", gap: 5, alignItems: "center" }}>
+          <PlusIcon size={12} /> {showCreate ? "Cancel" : "New"}
         </button>
       </div>
 
-      {showCreateModal && (
-        <div class="card" style={{ padding: 12, marginBottom: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+      {/* Create Form */}
+      {showCreate && (
+        <div class="proj-create-card">
           <input
-            class="search-bar"
+            class="lib-search-input"
+            style={{ background: "transparent", border: "none", outline: "none", padding: "0 0 8px 0", borderBottom: "1px solid rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, width: "100%" }}
             placeholder="Project title (e.g. EV Battery Tech)..."
             value={newTitle}
             onInput={(e) => setNewTitle(e.currentTarget.value)}
             autoFocus
           />
           <textarea
-            class="textarea"
-            placeholder="Optional project purpose or description..."
+            style={{ background: "transparent", border: "none", outline: "none", color: "#a1a1aa", fontSize: 12, resize: "none", width: "100%", marginTop: 8 }}
+            placeholder="Optional description..."
+            rows={2}
             value={newDesc}
-            onInput={(e) => setNewDesc(e.currentTarget.value)}
+            onInput={(e: any) => setNewDesc(e.target.value)}
           />
-          <button class="btn btn-primary" onClick={createProject} disabled={!newTitle.trim()}>
+          <button class="tt-submit-btn" style={{ marginTop: 8, alignSelf: "flex-end" }} onClick={createProject} disabled={!newTitle.trim()}>
             Create Project
           </button>
         </div>
       )}
 
+      {/* Project List */}
       {projectList.length === 0 ? (
-        <div class="empty-state" style={{ height: "auto" }}>
-          <p>No projects created yet.</p>
-          <p style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 6 }}>
-            Projects allow you to organize and curate captures across multiple tab contexts into a single topic.
-          </p>
+        <div class="tt-empty" style={{ paddingTop: 20 }}>
+          <div class="tt-ready-badge" style={{ borderStyle: "dashed" }}>No projects yet</div>
+          <p class="tt-empty-desc">Projects let you curate captures across tabs into one focused topic.</p>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
           {projectList.map((p) => (
-            <div key={p.project_id} class="card" style={{ cursor: "pointer" }} onClick={() => openProject(p)}>
-              <div class="card-content">
-                <div class="card-title" style={{ color: "var(--accent)" }}>{p.title}</div>
-                {p.description && (
-                  <div style={{ fontSize: 12, color: "var(--text-secondary)", margin: "4px 0" }}>
-                    {p.description}
-                  </div>
-                )}
-                <div class="card-meta">
-                  <span>Created {new Date(p.created_at).toLocaleDateString()}</span>
-                  <span>&bull;</span>
-                  <span>Click to view curated captures &rarr;</span>
+            <div key={p.project_id} class="ctx-card" style={{ cursor: "pointer" }} onClick={() => openProject(p)}>
+              <div class="cc-card-banner">PROJECT</div>
+              <div class="cc-card-body">
+                <div class="cc-card-title">{p.title}</div>
+                {p.description && <div class="cc-card-domain">{p.description}</div>}
+                <div class="cc-card-actions" style={{ marginTop: 6 }}>
+                  <div class="cc-actions-left" />
+                  <span class="cc-action-date">
+                    Created {new Date(p.created_at).toLocaleDateString()} · View captures →
+                  </span>
                 </div>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      <div class="tt-statusbar">
+        <span class="tt-status-left"><span class="tt-status-dot" /> Sync Active</span>
+        <span class="tt-status-right">v2.4</span>
+      </div>
     </div>
   );
 }
-
