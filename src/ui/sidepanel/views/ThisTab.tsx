@@ -1,4 +1,4 @@
-import { useState, useEffect } from "preact/hooks";
+import { useState, useEffect, useRef } from "preact/hooks";
 import { capturePipeline } from "../../../core/capture/pipeline";
 import { contextLifecycle } from "../../../core/context/lifecycle";
 import { captures as capRepo, contexts as ctxRepo } from "../../../data/repositories";
@@ -6,8 +6,6 @@ import { CaptureCard } from "../../components/CaptureCard";
 import { voiceNoteIntegration, VoiceRecordingState } from "../../../core/integrations/voice";
 import {
   ScreenshotIcon,
-  TextIcon,
-  NoteIcon,
   BookmarkIcon,
   MicIcon,
   StopIcon,
@@ -27,24 +25,19 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
     transcript: "",
     interimTranscript: "",
   });
+  const [currentTabTitle, setCurrentTabTitle] = useState("");
+  const [currentTabUrl, setCurrentTabUrl] = useState("");
+  const titleRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     load();
 
-    const handleActivated = () => {
-      load();
-    };
-
+    const handleActivated = () => load();
     const handleUpdated = (_tabId: number, changeInfo: chrome.tabs.TabChangeInfo) => {
-      if (changeInfo.status === "complete") {
-        load();
-      }
+      if (changeInfo.status === "complete") load();
     };
-
     const handleMessage = (msg: any) => {
-      if (msg?.type === "CAPTURE_SAVED" || msg?.type === "CONTEXT_CHANGED") {
-        load();
-      }
+      if (msg?.type === "CAPTURE_SAVED" || msg?.type === "CONTEXT_CHANGED") load();
     };
 
     chrome.tabs.onActivated.addListener(handleActivated);
@@ -61,10 +54,11 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
   async function load() {
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (!tab || !tab.id) {
-        setLoading(false);
-        return;
-      }
+      if (!tab || !tab.id) { setLoading(false); return; }
+
+      setCurrentTabTitle(tab.title || "");
+      setCurrentTabUrl(tab.url || "");
+
       const cid = await contextLifecycle.getOrCreateForTab(tab.id, tab.windowId);
       setContextId(cid);
 
@@ -85,16 +79,7 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
   async function handleTitleChange(newTitle: string) {
     const trimmed = newTitle.trim() || "Untitled Context";
     setContextTitle(trimmed);
-    if (contextId) {
-      await contextLifecycle.renameContext(contextId, trimmed);
-    }
-  }
-
-  async function captureText(text: string) {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab || !tab.id) return;
-    await capturePipeline.captureText({ text, tabId: tab.id, windowId: tab.windowId });
-    await load();
+    if (contextId) await contextLifecycle.renameContext(contextId, trimmed);
   }
 
   async function handleComposerSave() {
@@ -149,70 +134,77 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
     await load();
   }
 
-  if (loading) return <div class="empty-state">Loading...</div>;
-  if (!contextId) return <div class="empty-state">No active tab</div>;
+  function getDomain(url: string) {
+    try { return new URL(url).hostname.replace("www.", ""); }
+    catch { return ""; }
+  }
+
+  if (loading) return (
+    <div class="sp-loading">
+      <span class="sp-loading-dot" /><span class="sp-loading-dot" /><span class="sp-loading-dot" />
+    </div>
+  );
+  if (!contextId) return <div class="empty-state"><p>No active tab detected.</p></div>;
 
   return (
-    <div class="view-container">
-      {/* Sleek compact session header */}
-      <div class="context-header">
-        <div class="context-title-wrap">
-          <span class="live-dot" />
-          <div
-            class="context-title"
+    <div class="tt-root">
+
+      {/* ── Section: Context Header ── */}
+      <div class="tt-context-row">
+        <div class="tt-context-label">
+          <span class="tt-live-dot" />
+          <span
+            class="tt-context-name"
             contentEditable={true}
+            ref={titleRef}
             onBlur={(e: any) => handleTitleChange(e.currentTarget.textContent || "")}
             onKeyDown={(e: KeyboardEvent) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                (e.currentTarget as HTMLElement).blur();
-              }
+              if (e.key === "Enter") { e.preventDefault(); (e.currentTarget as HTMLElement).blur(); }
             }}
-            title="Click to rename session context"
+            title="Click to rename"
           >
-            {contextTitle}
-          </div>
+            {contextTitle.toUpperCase()}
+          </span>
         </div>
-        <span class="context-meta-badge">
+        <span class="tt-count-pill">
+          <span class="tt-count-dot" />
           {captures.length} {captures.length === 1 ? "item" : "items"}
         </span>
       </div>
 
-      {/* Modern Inline Composer */}
-      <div class="composer-card">
-        <div class="composer-header">
-          <div class="composer-modes">
+      {/* ── Section: Composer Card ── */}
+      <div class="tt-composer">
+        {/* Composer Top Row: mode pills + media action pills */}
+        <div class="tt-composer-top">
+          <div class="tt-mode-group">
             <button
-              class={`mode-pill ${composerType === "note" ? "active" : ""}`}
+              class={`tt-mode-btn ${composerType === "note" ? "active" : ""}`}
               onClick={() => setComposerType("note")}
             >
-              <NoteIcon size={12} /> Note
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+              </svg>
+              Note
             </button>
             <button
-              class={`mode-pill ${composerType === "question" ? "active" : ""}`}
+              class={`tt-mode-btn ${composerType === "question" ? "active" : ""}`}
               onClick={() => setComposerType("question")}
             >
-              <QuestionIcon size={12} /> Question
+              <QuestionIcon size={11} color="currentColor" />
+              Question
             </button>
           </div>
-
-          <div class="composer-quick-actions">
-            <button
-              class="pill-action"
-              onClick={captureScreenshot}
-              title="Capture visible screen"
-            >
-              <ScreenshotIcon size={12} color="var(--lime)" /> Screen
+          <div class="tt-media-group">
+            <button class="tt-media-btn" onClick={captureScreenshot} title="Capture screen">
+              <ScreenshotIcon size={11} color="currentColor" />
+              Screen
+            </button>
+            <button class="tt-media-btn" onClick={captureBookmark} title="Save page link">
+              <BookmarkIcon size={11} color="currentColor" />
+              Link
             </button>
             <button
-              class="pill-action"
-              onClick={captureBookmark}
-              title="Save bookmark link"
-            >
-              <BookmarkIcon size={12} color="var(--lime)" /> Link
-            </button>
-            <button
-              class={`pill-action ${voiceState.isRecording ? "recording" : ""}`}
+              class={`tt-media-btn ${voiceState.isRecording ? "recording" : ""}`}
               onClick={async () => {
                 if (voiceState.isRecording) {
                   voiceNoteIntegration.stopRecording();
@@ -229,29 +221,22 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
                   );
                 }
               }}
-              title={voiceState.isRecording ? "Stop recording voice note" : "Record voice note"}
+              title={voiceState.isRecording ? "Stop recording" : "Record voice note"}
             >
-              {voiceState.isRecording ? (
-                <>
-                  <StopIcon size={12} /> Stop
-                </>
-              ) : (
-                <>
-                  <MicIcon size={12} color="var(--lime)" /> Voice
-                </>
-              )}
+              {voiceState.isRecording ? <><StopIcon size={11} /> Stop</> : <><MicIcon size={11} color="currentColor" /> Voice</>}
             </button>
           </div>
         </div>
 
+        {/* Textarea */}
         <textarea
-          class="composer-textarea"
+          class="tt-textarea"
           rows={2}
           value={composerText}
           placeholder={
             composerType === "note"
               ? "Type a thought, memo, or key insight..."
-              : "What question or inquiry needs investigating?..."
+              : "What question needs investigating?..."
           }
           onInput={(e: any) => setComposerText(e.target.value)}
           onKeyDown={(e: KeyboardEvent) => {
@@ -262,85 +247,135 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
           }}
         />
 
-        <div class="composer-footer">
-          <span class="composer-hint">Press ⌘/Ctrl+Enter</span>
+        {/* Composer Footer */}
+        <div class="tt-composer-footer">
+          <span class="tt-hint">
+            Press
+            <kbd class="tt-kbd">⌘</kbd>
+            <kbd class="tt-kbd">Ctrl</kbd>
+            <span class="tt-kbd-plus">+</span>
+            <kbd class="tt-kbd">Enter</kbd>
+          </span>
           <button
-            class="btn btn-primary"
+            class={`tt-submit-btn ${savingComposer ? "loading" : ""}`}
             disabled={!composerText.trim() || savingComposer}
             onClick={handleComposerSave}
-            style={{
-              padding: "4px 12px",
-              fontSize: 11.5,
-              background: "var(--lime)",
-              color: "#000000",
-              fontWeight: 700,
-              borderColor: "transparent",
-            }}
           >
-            {savingComposer
-              ? "Saving..."
-              : composerType === "question"
-              ? "Ask Question"
-              : "Add Note"}
+            {savingComposer ? "Saving..." : composerType === "question" ? "Ask Question ↵" : "Add Note ↵"}
           </button>
         </div>
       </div>
 
+      {/* Voice Recording Banner */}
       {voiceState.isRecording && (
-        <div
-          style={{
-            padding: "8px 12px",
-            background: "var(--lime-subtle)",
-            border: "1px solid var(--lime)",
-            borderRadius: 8,
-            marginBottom: 10,
-            fontSize: 12,
-          }}
-        >
-          <div style={{ fontWeight: 650, color: "var(--lime)", display: "flex", alignItems: "center", gap: 6 }}>
-            <span class="live-dot" />
-            Recording Voice Note...
+        <div class="tt-voice-banner">
+          <div class="tt-voice-top">
+            <span class="tt-live-dot pulse" />
+            <span>Recording Voice Note...</span>
           </div>
-          <div style={{ marginTop: 4, fontStyle: "italic", color: "var(--text)" }}>
-            {voiceState.transcript} <span style={{ color: "var(--text-secondary)" }}>{voiceState.interimTranscript}</span>
-          </div>
+          {(voiceState.transcript || voiceState.interimTranscript) && (
+            <div class="tt-voice-text">
+              {voiceState.transcript}
+              <span style={{ opacity: 0.6 }}>{voiceState.interimTranscript}</span>
+            </div>
+          )}
         </div>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {captures.length === 0 ? (
-          <div class="empty-state-card">
-            <div class="empty-state-badge">
-              <span class="live-dot" /> Ready to capture
-            </div>
-            <p class="empty-state-desc">
-              Select text on this webpage to pop up the <span class="highlight-code">Ask</span> pill, or trigger actions below:
-            </p>
-            <div class="empty-quick-grid">
-              <button class="empty-quick-btn" onClick={captureScreenshot} title="Capture visible screen">
-                <ScreenshotIcon size={13} color="var(--lime)" />
-                <span>Screen</span>
-              </button>
-              <button class="empty-quick-btn" onClick={captureBookmark} title="Save this URL as bookmark">
-                <BookmarkIcon size={13} color="var(--lime)" />
-                <span>Link</span>
-              </button>
-              <button class="empty-quick-btn" onClick={() => setComposerType("question")} title="Ask a question">
-                <QuestionIcon size={13} color="var(--lime)" />
-                <span>Question</span>
-              </button>
-            </div>
+      {/* ── Section: Captures or Empty State ── */}
+      {captures.length === 0 ? (
+        <div class="tt-empty">
+          {/* Status badge */}
+          <div class="tt-ready-badge">
+            <span class="tt-ready-dot" />
+            READY TO CAPTURE
           </div>
-        ) : (
-          captures.map((cap) => (
-            <CaptureCard
-              key={cap.capture_id}
-              capture={cap}
-              onDelete={() => deleteCapture(cap.capture_id)}
-              onViewDetail={onViewDetail}
-            />
-          ))
-        )}
+
+          {/* Instruction text */}
+          <p class="tt-empty-desc">
+            Select text on this webpage to pop up the{" "}
+            <span class="tt-ask-pill-demo">Ask</span> pill, or trigger actions below:
+          </p>
+
+          {/* Quick action row */}
+          <div class="tt-quick-row">
+            <button class="tt-quick-btn" onClick={captureScreenshot}>
+              <ScreenshotIcon size={13} color="currentColor" />
+              Screen
+            </button>
+            <button class="tt-quick-btn" onClick={captureBookmark}>
+              <BookmarkIcon size={13} color="currentColor" />
+              Link
+            </button>
+            <button class="tt-quick-btn" onClick={() => setComposerType("question")}>
+              <QuestionIcon size={13} color="currentColor" />
+              Question
+            </button>
+          </div>
+
+          {/* Active context snippet: show current tab */}
+          {currentTabTitle && (
+            <div class="tt-snippet-section">
+              <div class="tt-snippet-header">
+                <span class="tt-snippet-label">Active Context Snippet</span>
+                <button
+                  class="tt-snippet-link"
+                  onClick={() => chrome.runtime.sendMessage({ type: "NAVIGATE_PANEL", targetTab: "all" })}
+                >
+                  Explore Library ↗
+                </button>
+              </div>
+              <div class="tt-snippet-card">
+                <div class="tt-snippet-icon">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                  </svg>
+                </div>
+                <div class="tt-snippet-info">
+                  <div class="tt-snippet-title">{currentTabTitle}</div>
+                  <div class="tt-snippet-meta">
+                    {getDomain(currentTabUrl)} · Auto-indexed
+                  </div>
+                </div>
+                <div class="tt-snippet-chevron">›</div>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* Active context snippet header when captures exist */}
+          <div class="tt-snippet-header" style={{ marginTop: 2 }}>
+            <span class="tt-snippet-label">
+              Active Context Snippet
+            </span>
+            <button
+              class="tt-snippet-link"
+              onClick={() => chrome.runtime.sendMessage({ type: "NAVIGATE_PANEL", targetTab: "all" })}
+            >
+              Explore Library ↗
+            </button>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {captures.map((cap) => (
+              <CaptureCard
+                key={cap.capture_id}
+                capture={cap}
+                onDelete={() => deleteCapture(cap.capture_id)}
+                onViewDetail={onViewDetail}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* ── Bottom status bar ── */}
+      <div class="tt-statusbar">
+        <span class="tt-status-left">
+          <span class="tt-status-dot" />
+          Sync Active
+        </span>
+        <span class="tt-status-right">v2.4</span>
       </div>
     </div>
   );

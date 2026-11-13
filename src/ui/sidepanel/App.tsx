@@ -69,82 +69,92 @@ export default function SidePanelApp() {
 
   return (
     <div class="container">
-      <div class="header">
-        <div class="app-title">ContextCapture</div>
-        <div style={{ display: "flex", gap: 8 }}>
+      {/* ── App Header ── */}
+      <header class="sp-header">
+        <div class="sp-brand">
+          <span class="sp-brand-dot" />
+          <span class="sp-brand-name">ContextCapture</span>
+        </div>
+        <div class="sp-header-actions">
           <button
-            class="btn btn-icon"
-            title="Options & Settings"
+            class="sp-icon-btn"
+            title="Search (Ctrl+F)"
+            aria-label="Search captures"
+            onClick={() => { setActiveTab("all"); setDetailCaptureId(null); setTimeout(() => (window as any).__focusAllSearch?.(), 50); }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+          </button>
+          <button
+            class="sp-icon-btn"
+            title="Settings"
             aria-label="Open settings page"
             onClick={() => chrome.runtime.openOptionsPage()}
           >
-            <SettingsIcon size={16} />
+            <SettingsIcon size={15} />
           </button>
         </div>
-      </div>
-      <nav class="nav-tabs" role="tablist">
+      </header>
+
+      {/* ── Nav Tabs ── */}
+      <nav class="sp-nav" role="tablist">
         <button
-          class={`tab ${activeTab === "thistab" && !detailCaptureId ? "active" : ""}`}
+          class={`sp-tab ${activeTab === "thistab" && !detailCaptureId ? "active" : ""}`}
           role="tab"
-          aria-selected={activeTab === "thistab"}
           onClick={() => { setActiveTab("thistab"); setDetailCaptureId(null); }}
           title="Ctrl+1"
         >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/>
+          </svg>
           Tab
         </button>
         <button
-          class={`tab ${activeTab === "all" && !detailCaptureId ? "active" : ""}`}
+          class={`sp-tab ${activeTab === "all" && !detailCaptureId ? "active" : ""}`}
           role="tab"
-          aria-selected={activeTab === "all"}
           onClick={() => { setActiveTab("all"); setDetailCaptureId(null); }}
           title="Ctrl+2"
         >
-          Library {captureCount > 0 && (
-            <span
-              style={{
-                fontSize: 10,
-                fontWeight: 600,
-                background: "var(--sunset-orange-subtle)",
-                color: "var(--sunset-orange)",
-                border: "1px solid rgba(255, 107, 53, 0.3)",
-                borderRadius: 10,
-                padding: "1px 6px",
-                marginLeft: 4,
-              }}
-            >
-              {captureCount}
-            </span>
-          )}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+          Library
+          {captureCount > 0 && <span class="sp-count-badge">{captureCount}</span>}
         </button>
         <button
-          class={`tab ${activeTab === "contexts" && !detailCaptureId ? "active" : ""}`}
+          class={`sp-tab ${activeTab === "contexts" && !detailCaptureId ? "active" : ""}`}
           role="tab"
-          aria-selected={activeTab === "contexts"}
           onClick={() => { setActiveTab("contexts"); setDetailCaptureId(null); }}
           title="Ctrl+3"
         >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>
+          </svg>
           Contexts
         </button>
         <button
-          class={`tab ${activeTab === "projects" && !detailCaptureId ? "active" : ""}`}
+          class={`sp-tab ${activeTab === "projects" && !detailCaptureId ? "active" : ""}`}
           role="tab"
-          aria-selected={activeTab === "projects"}
           onClick={() => { setActiveTab("projects"); setDetailCaptureId(null); }}
           title="Ctrl+4"
         >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
           Projects
         </button>
         <button
-          class={`tab ${activeTab === "assistant" && !detailCaptureId ? "active" : ""}`}
+          class={`sp-tab ${activeTab === "assistant" && !detailCaptureId ? "active" : ""}`}
           role="tab"
-          aria-selected={activeTab === "assistant"}
           onClick={() => { setActiveTab("assistant"); setDetailCaptureId(null); }}
           title="Ctrl+5"
-          style={{ display: "inline-flex", alignItems: "center", gap: 5 }}
         >
-          <SparklesIcon size={13} color={activeTab === "assistant" ? "var(--ocean-blue-light)" : "currentColor"} /> Assistant
+          <SparklesIcon size={12} color="currentColor" />
+          Assistant
         </button>
       </nav>
+
       <div class="content">
         {detailCaptureId ? (
           <CaptureDetail
