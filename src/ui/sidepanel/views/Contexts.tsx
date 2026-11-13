@@ -110,15 +110,6 @@ export default function Contexts() {
     if (tab.id && tab.windowId) { await contextLifecycle.rebindToTab(ctx.context_id, tab.id, tab.windowId); await load(); }
   }
 
-  async function bindToActiveTab(ctx: any) {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab?.id && tab?.windowId) {
-      await contextLifecycle.rebindToTab(ctx.context_id, tab.id, tab.windowId);
-      chrome.runtime.sendMessage({ type: "CONTEXT_CHANGED", payload: { contextId: ctx.context_id } });
-      await load();
-    }
-  }
-
   async function restoreContext(ctx: any) {
     await contextLifecycle.restoreContext(ctx.context_id); await load();
   }
@@ -295,7 +286,6 @@ export default function Contexts() {
                   <div class="cc-card-actions">
                     <div class="cc-actions-left">
                       <button class="cc-action-btn" onClick={() => openContext(ctx)} title="Open in new tab">Open Tab</button>
-                      <button class="cc-action-btn" onClick={() => bindToActiveTab(ctx)} title="Bind to current tab">Bind</button>
                       {view === "archived" && (
                         <button class="cc-action-btn" onClick={() => restoreContext(ctx)}>Restore</button>
                       )}
