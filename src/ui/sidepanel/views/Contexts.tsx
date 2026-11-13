@@ -116,7 +116,7 @@ export default function Contexts() {
   const allList = [...active, ...archived];
 
   return (
-    <div class="container">
+    <div class="view-container">
       {/* View toggle */}
       <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
         <button class={`btn ${view === "active" ? "btn-primary" : ""}`} onClick={() => { setView("active"); setSelected(new Set()); }}>

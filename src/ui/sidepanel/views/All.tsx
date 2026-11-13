@@ -81,7 +81,7 @@ export default function AllCaptures({ onViewDetail }: { onViewDetail?: (id: stri
   if (loading) return <div class="empty-state">Loading...</div>;
 
   return (
-    <div class="container">
+    <div class="view-container">
       <div class="filter-bar" style={{ flexWrap: "wrap", gap: 6 }}>
         <div style={{ position: "relative", flex: 1, minWidth: 160, display: "flex", alignItems: "center" }}>
           <SearchIcon size={14} style={{ position: "absolute", left: 10, color: "var(--text-muted)", pointerEvents: "none" }} />

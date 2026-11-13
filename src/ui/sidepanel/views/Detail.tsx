@@ -92,7 +92,7 @@ export default function CaptureDetail({ captureId: initialCaptureId, onBack, onS
 
   if (!capture) {
     return (
-      <div class="container">
+      <div class="view-container">
         <div class="empty-state">
           <h3>Capture not found</h3>
           {onBack && (
@@ -106,7 +106,7 @@ export default function CaptureDetail({ captureId: initialCaptureId, onBack, onS
   }
 
   return (
-    <div class="container" style={{ padding: 16, overflowY: "auto" }}>
+    <div class="view-container">
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
         {onBack && (
           <button class="btn" onClick={onBack} style={{ padding: "4px 10px" }} aria-label="Back">

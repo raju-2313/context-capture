@@ -14,6 +14,36 @@ interface AssistantViewProps {
   initialQuery?: string;
 }
 
+function TypewriterText({ text }: { text: string }) {
+  const [displayed, setDisplayed] = useState("");
+
+  useEffect(() => {
+    setDisplayed("");
+    if (!text) return;
+    let i = 0;
+    const step = Math.max(1, Math.floor(text.length / 70));
+    const timer = setInterval(() => {
+      i += step;
+      if (i >= text.length) {
+        setDisplayed(text);
+        clearInterval(timer);
+      } else {
+        setDisplayed(text.slice(0, i));
+      }
+    }, 16);
+    return () => clearInterval(timer);
+  }, [text]);
+
+  const isTyping = displayed.length < text.length;
+
+  return (
+    <div class="typewriter-content" style={{ whiteSpace: "pre-wrap" }}>
+      {displayed}
+      {isTyping && <span class="typing-cursor">▍</span>}
+    </div>
+  );
+}
+
 export default function AssistantView({ onViewDetail, initialQuery }: AssistantViewProps) {
   const [query, setQuery] = useState(initialQuery || "");
   const [scope, setScope] = useState<"all" | "context" | "project">("all");
@@ -82,14 +112,14 @@ export default function AssistantView({ onViewDetail, initialQuery }: AssistantV
   }
 
   return (
-    <div class="container" style={{ padding: "12px 14px", overflowY: "auto" }}>
+    <div class="view-container">
       {/* Privacy guarantee banner */}
       <div
         style={{
-          background: "var(--muted)",
+          background: "var(--surface)",
           padding: "8px 12px",
           borderRadius: 8,
-          marginBottom: 12,
+          marginBottom: 10,
           fontSize: 11,
           display: "flex",
           alignItems: "center",
@@ -98,7 +128,7 @@ export default function AssistantView({ onViewDetail, initialQuery }: AssistantV
           border: "1px solid var(--border)",
         }}
       >
-        <LockIcon size={14} color="var(--ocean-blue-light)" />
+        <LockIcon size={14} color="var(--lime)" />
         <span>
           <strong style={{ color: "#ffffff" }}>Grounded AI</strong> — Answers cite only your saved captures. Zero external telemetry.
         </span>
@@ -214,10 +244,10 @@ export default function AssistantView({ onViewDetail, initialQuery }: AssistantV
               lineHeight: 1.6,
             }}
           >
-            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8, color: "var(--accent)" }}>
+            <div style={{ fontWeight: 650, fontSize: 13, marginBottom: 8, color: "var(--lime)" }}>
               Q: {answer.query}
             </div>
-            <div style={{ whiteSpace: "pre-wrap", fontSize: 13 }}>{answer.answer}</div>
+            <TypewriterText text={answer.answer} />
           </div>
 
           {/* Citations */}
@@ -264,7 +294,7 @@ export default function AssistantView({ onViewDetail, initialQuery }: AssistantV
               lineHeight: 1.6,
             }}
           >
-            <div style={{ whiteSpace: "pre-wrap", fontSize: 13 }}>{summary.summary}</div>
+            <TypewriterText text={summary.summary} />
           </div>
 
           {summary.citations.length > 0 && (

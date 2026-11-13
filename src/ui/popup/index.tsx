@@ -77,17 +77,17 @@ export default function QuickAdd() {
         flexDirection: "column",
         gap: 12,
         minWidth: 340,
-        background: "var(--bg, #090e17)",
+        background: "var(--bg, #09090b)",
         color: "#ffffff",
       }}
     >
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--sunset-orange, #ff6b35)", boxShadow: "0 0 8px var(--sunset-orange, #ff6b35)" }}></span>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--lime)", boxShadow: "0 0 10px var(--lime)" }}></span>
           <strong style={{ fontSize: 13, letterSpacing: "-0.01em", color: "#ffffff" }}>ContextCapture</strong>
         </div>
-        <div style={{ display: "flex", gap: 4, background: "var(--surface, #142036)", padding: 2, borderRadius: 6, border: "1px solid var(--border)" }}>
+        <div style={{ display: "flex", gap: 4, background: "var(--surface)", padding: 2, borderRadius: 6, border: "1px solid var(--border)" }}>
           <button
             class="btn"
             style={{
@@ -96,8 +96,9 @@ export default function QuickAdd() {
               display: "inline-flex",
               alignItems: "center",
               gap: 4,
-              background: type === "note" ? "var(--ocean-blue, #0284c7)" : "transparent",
-              color: type === "note" ? "#ffffff" : "var(--text-secondary)",
+              background: type === "note" ? "var(--lime)" : "transparent",
+              color: type === "note" ? "#000000" : "var(--text-secondary)",
+              fontWeight: type === "note" ? 700 : 500,
               border: "none",
             }}
             onClick={() => setType("note")}
@@ -112,8 +113,9 @@ export default function QuickAdd() {
               display: "inline-flex",
               alignItems: "center",
               gap: 4,
-              background: type === "question" ? "var(--sunset-orange, #ff6b35)" : "transparent",
-              color: type === "question" ? "#ffffff" : "var(--text-secondary)",
+              background: type === "question" ? "var(--lime)" : "transparent",
+              color: type === "question" ? "#000000" : "var(--text-secondary)",
+              fontWeight: type === "question" ? 700 : 500,
               border: "none",
             }}
             onClick={() => setType("question")}
@@ -144,7 +146,7 @@ export default function QuickAdd() {
           disabled={loading}
           title="Capture active tab screenshot and open side panel"
         >
-          <ScreenshotIcon size={14} color="var(--ocean-blue, #0284c7)" /> Screenshot
+          <ScreenshotIcon size={14} color="var(--lime)" /> Screenshot
         </button>
         <button
           class="btn"
@@ -153,7 +155,7 @@ export default function QuickAdd() {
           disabled={loading}
           title="Bookmark active webpage into current context"
         >
-          <BookmarkIcon size={14} color="var(--ocean-blue, #0284c7)" /> Bookmark
+          <BookmarkIcon size={14} color="var(--lime)" /> Bookmark
         </button>
       </div>
 

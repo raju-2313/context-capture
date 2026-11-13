@@ -76,7 +76,7 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
   // Selected Project Detail View
   if (selectedProject) {
     return (
-      <div class="container">
+      <div class="view-container">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <button class="btn btn-icon" onClick={() => { setSelectedProject(null); loadProjects(); }}>
             &larr; All Projects
@@ -123,7 +123,7 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
 
   // Projects List View
   return (
-    <div class="container">
+    <div class="view-container">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <h3 style={{ fontSize: 14 }}>Projects ({projectList.length})</h3>
         <button class="btn btn-primary" onClick={() => setShowCreateModal(!showCreateModal)} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>

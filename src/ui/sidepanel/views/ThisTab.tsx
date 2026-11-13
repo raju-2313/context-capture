@@ -153,23 +153,29 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
   if (!contextId) return <div class="empty-state">No active tab</div>;
 
   return (
-    <div class="container">
+    <div class="view-container">
+      {/* Sleek compact session header */}
       <div class="context-header">
-        <div
-          class="context-title"
-          contentEditable={true}
-          onBlur={(e: any) => handleTitleChange(e.currentTarget.textContent || "")}
-          onKeyDown={(e: KeyboardEvent) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              (e.currentTarget as HTMLElement).blur();
-            }
-          }}
-          title="Click to edit context title"
-        >
-          {contextTitle}
+        <div class="context-title-wrap">
+          <span class="live-dot" />
+          <div
+            class="context-title"
+            contentEditable={true}
+            onBlur={(e: any) => handleTitleChange(e.currentTarget.textContent || "")}
+            onKeyDown={(e: KeyboardEvent) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                (e.currentTarget as HTMLElement).blur();
+              }
+            }}
+            title="Click to rename session context"
+          >
+            {contextTitle}
+          </div>
         </div>
-        <div class="context-meta">{captures.length} captures &bull; Active context</div>
+        <span class="context-meta-badge">
+          {captures.length} {captures.length === 1 ? "item" : "items"}
+        </span>
       </div>
 
       {/* Modern Inline Composer */}
@@ -183,7 +189,7 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
               <NoteIcon size={12} /> Note
             </button>
             <button
-              class={`mode-pill ${composerType === "question" ? "active orange" : ""}`}
+              class={`mode-pill ${composerType === "question" ? "active" : ""}`}
               onClick={() => setComposerType("question")}
             >
               <QuestionIcon size={12} /> Question
@@ -196,14 +202,14 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
               onClick={captureScreenshot}
               title="Capture visible screen"
             >
-              <ScreenshotIcon size={12} color="var(--ocean-blue)" /> Screen
+              <ScreenshotIcon size={12} color="var(--lime)" /> Screen
             </button>
             <button
               class="pill-action"
               onClick={captureBookmark}
               title="Save bookmark link"
             >
-              <BookmarkIcon size={12} color="var(--ocean-blue)" /> Link
+              <BookmarkIcon size={12} color="var(--lime)" /> Link
             </button>
             <button
               class={`pill-action ${voiceState.isRecording ? "recording" : ""}`}
@@ -231,7 +237,7 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
                 </>
               ) : (
                 <>
-                  <MicIcon size={12} color="var(--sunset-orange)" /> Voice
+                  <MicIcon size={12} color="var(--lime)" /> Voice
                 </>
               )}
             </button>
@@ -265,7 +271,9 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
             style={{
               padding: "4px 12px",
               fontSize: 11.5,
-              background: composerType === "question" ? "var(--sunset-orange)" : "var(--ocean-blue)",
+              background: "var(--lime)",
+              color: "#000000",
+              fontWeight: 700,
               borderColor: "transparent",
             }}
           >
@@ -282,15 +290,15 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
         <div
           style={{
             padding: "8px 12px",
-            background: "var(--sunset-orange-subtle)",
-            border: "1px solid var(--sunset-orange)",
+            background: "var(--lime-subtle)",
+            border: "1px solid var(--lime)",
             borderRadius: 8,
             marginBottom: 10,
             fontSize: 12,
           }}
         >
-          <div style={{ fontWeight: 600, color: "var(--sunset-orange)", display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--sunset-orange)", display: "inline-block" }}></span>
+          <div style={{ fontWeight: 650, color: "var(--lime)", display: "flex", alignItems: "center", gap: 6 }}>
+            <span class="live-dot" />
             Recording Voice Note...
           </div>
           <div style={{ marginTop: 4, fontStyle: "italic", color: "var(--text)" }}>
@@ -301,27 +309,26 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {captures.length === 0 ? (
-          <div class="empty-state" style={{ height: "auto", padding: "28px 16px" }}>
-            <div style={{ marginBottom: 12, display: "flex", justifyContent: "center" }}>
-              <NoteIcon size={36} color="var(--ocean-blue)" />
+          <div class="empty-state-card">
+            <div class="empty-state-badge">
+              <span class="live-dot" /> Ready to capture
             </div>
-            <h3 style={{ marginBottom: 8, color: "#ffffff" }}>Active Tab Context</h3>
-            <p style={{ marginBottom: 16, color: "var(--text-secondary)", fontSize: 12 }}>
-              Select text on any webpage to use the Ask pill, take a screenshot, or type in the composer above.
+            <p class="empty-state-desc">
+              Select text on this webpage to pop up the <span class="highlight-code">Ask</span> pill, or trigger actions below:
             </p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, width: "100%", textAlign: "center" }}>
-              <div style={{ padding: "12px 6px", background: "var(--surface)", borderRadius: 8, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                <TextIcon size={20} color="var(--sunset-orange)" />
-                <div style={{ fontSize: 11, fontWeight: 600 }}>Text &amp; Notes</div>
-              </div>
-              <div style={{ padding: "12px 6px", background: "var(--surface)", borderRadius: 8, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                <ScreenshotIcon size={20} color="var(--ocean-blue)" />
-                <div style={{ fontSize: 11, fontWeight: 600 }}>Screenshots</div>
-              </div>
-              <div style={{ padding: "12px 6px", background: "var(--surface)", borderRadius: 8, border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                <BookmarkIcon size={20} color="var(--ocean-blue)" />
-                <div style={{ fontSize: 11, fontWeight: 600 }}>Links &amp; Pages</div>
-              </div>
+            <div class="empty-quick-grid">
+              <button class="empty-quick-btn" onClick={captureScreenshot} title="Capture visible screen">
+                <ScreenshotIcon size={13} color="var(--lime)" />
+                <span>Screen</span>
+              </button>
+              <button class="empty-quick-btn" onClick={captureBookmark} title="Save this URL as bookmark">
+                <BookmarkIcon size={13} color="var(--lime)" />
+                <span>Link</span>
+              </button>
+              <button class="empty-quick-btn" onClick={() => setComposerType("question")} title="Ask a question">
+                <QuestionIcon size={13} color="var(--lime)" />
+                <span>Question</span>
+              </button>
             </div>
           </div>
         ) : (

@@ -84,12 +84,12 @@ export function CaptureCard({
 
   const typeLabel = currentCapture.type.charAt(0).toUpperCase() + currentCapture.type.slice(1);
   const typeColors: Record<string, string> = {
-    text: "var(--sunset-orange)",
-    note: "var(--ocean-blue)",
-    code: "var(--ocean-blue)",
-    link: "var(--ocean-blue)",
-    question: "var(--sunset-orange)",
-    screenshot: "var(--ocean-blue)",
+    text: "var(--lime)",
+    note: "var(--lime)",
+    code: "var(--lime)",
+    link: "var(--lime)",
+    question: "var(--lime)",
+    screenshot: "var(--lime)",
   };
 
   const tags: string[] = currentCapture.tags || [];
@@ -164,19 +164,19 @@ export function CaptureCard({
           {currentCapture.duplicate_warning && (
             <span
               style={{
-                color: "var(--sunset-orange)",
+                color: "var(--warning)",
                 fontSize: 11,
-                fontWeight: 600,
+                fontWeight: 650,
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 4,
               }}
               title="A capture with this URL already exists in your library"
             >
-              <DuplicateIcon size={12} color="var(--sunset-orange)" /> Duplicate URL
+              <DuplicateIcon size={12} color="var(--warning)" /> Duplicate URL
             </span>
           )}
-          {addedMsg && <span style={{ color: "var(--ocean-blue-light)", fontWeight: 600 }}>{addedMsg}</span>}
+          {addedMsg && <span style={{ color: "var(--lime)", fontWeight: 600 }}>{addedMsg}</span>}
         </div>
         {currentCapture.content_text && <div class="card-text">{currentCapture.content_text}</div>}
         {currentCapture.code_language && (
@@ -310,7 +310,7 @@ export function CaptureCard({
             title="Delete"
             aria-label="Delete capture"
           >
-            <TrashIcon size={14} color="var(--sunset-orange)" />
+            <TrashIcon size={14} color="var(--danger)" />
           </button>
         </div>
       </div>

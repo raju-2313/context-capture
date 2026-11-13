@@ -100,37 +100,37 @@
           gap: 6px;
           height: 32px;
           padding: 0 10px 0 8px;
-          background: rgba(9, 14, 23, 0.94);
+          background: rgba(9, 9, 11, 0.96);
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
           border: 1px solid rgba(255, 255, 255, 0.14);
           border-radius: 9999px;
-          box-shadow: 0 8px 24px -2px rgba(0, 0, 0, 0.65),
+          box-shadow: 0 8px 24px -2px rgba(0, 0, 0, 0.75),
                       0 0 0 1px rgba(255, 255, 255, 0.05),
-                      0 2px 6px rgba(0, 0, 0, 0.4);
+                      0 2px 6px rgba(0, 0, 0, 0.5);
           cursor: pointer;
           transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
           color: #ffffff;
         }
 
         .cc-pill:hover {
-          background: rgba(15, 23, 42, 0.98);
-          border-color: rgba(2, 132, 199, 0.6);
+          background: #121215;
+          border-color: rgba(223, 255, 0, 0.6);
           transform: translateY(-1px);
-          box-shadow: 0 12px 28px -2px rgba(0, 0, 0, 0.75),
-                      0 0 16px -2px rgba(2, 132, 199, 0.45);
+          box-shadow: 0 12px 28px -2px rgba(0, 0, 0, 0.85),
+                      0 0 16px -2px rgba(223, 255, 0, 0.45);
         }
 
         .cc-pill-icon {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #38bdf8;
+          color: #DFFF00;
         }
 
         .cc-pill-label {
           font-size: 12.5px;
-          font-weight: 600;
+          font-weight: 700;
           letter-spacing: -0.01em;
           color: #ffffff;
         }
@@ -143,21 +143,21 @@
         }
 
         .cc-pill:hover .cc-pill-chevron {
-          color: #38bdf8;
+          color: #DFFF00;
           transform: translateY(1px);
         }
 
         /* --- Expanded Menu Card (Clean Craft Floating Menu) --- */
         .cc-menu {
           width: 270px;
-          background: rgba(9, 14, 23, 0.96);
+          background: rgba(9, 9, 11, 0.98);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
           border: 1px solid rgba(255, 255, 255, 0.12);
           border-radius: 14px;
-          box-shadow: 0 20px 48px -6px rgba(0, 0, 0, 0.8),
+          box-shadow: 0 20px 48px -6px rgba(0, 0, 0, 0.9),
                       0 0 0 1px rgba(255, 255, 255, 0.05),
-                      0 0 24px -4px rgba(2, 132, 199, 0.25);
+                      0 0 24px -4px rgba(223, 255, 0, 0.25);
           overflow: hidden;
           display: flex;
           flex-direction: column;
@@ -181,13 +181,13 @@
           width: 7px;
           height: 7px;
           border-radius: 50%;
-          background: #ff6b35;
-          box-shadow: 0 0 8px #ff6b35;
+          background: #DFFF00;
+          box-shadow: 0 0 8px #DFFF00;
         }
 
         .cc-title-text {
           font-size: 11.5px;
-          font-weight: 650;
+          font-weight: 700;
           letter-spacing: 0.03em;
           color: #ffffff;
           text-transform: uppercase;
@@ -208,16 +208,16 @@
         }
 
         .cc-close-btn:hover {
-          color: #ff6b35;
-          background: rgba(255, 107, 53, 0.12);
+          color: #ff4d4f;
+          background: rgba(255, 77, 79, 0.12);
         }
 
         .cc-preview-box {
           padding: 8px 14px;
-          background: rgba(0, 0, 0, 0.35);
+          background: rgba(0, 0, 0, 0.5);
           border-bottom: 1px solid rgba(255, 255, 255, 0.05);
           font-size: 11.5px;
-          color: #94a3b8;
+          color: #a1a1aa;
           font-style: italic;
           white-space: nowrap;
           overflow: hidden;
@@ -253,13 +253,13 @@
         }
 
         .cc-action-item.cc-item-ai {
-          background: rgba(2, 132, 199, 0.1);
-          border: 1px solid rgba(2, 132, 199, 0.25);
+          background: rgba(223, 255, 0, 0.08);
+          border: 1px solid rgba(223, 255, 0, 0.25);
         }
 
         .cc-action-item.cc-item-ai:hover {
-          background: rgba(2, 132, 199, 0.2);
-          border-color: rgba(2, 132, 199, 0.5);
+          background: rgba(223, 255, 0, 0.16);
+          border-color: rgba(223, 255, 0, 0.5);
         }
 
         .cc-item-icon {
@@ -270,19 +270,19 @@
           height: 26px;
           border-radius: 6px;
           background: rgba(255, 255, 255, 0.06);
-          color: #94a3b8;
+          color: #a1a1aa;
           flex-shrink: 0;
           transition: all 0.12s ease;
         }
 
         .cc-action-item:hover .cc-item-icon {
-          color: #ffffff;
-          background: rgba(255, 255, 255, 0.12);
+          color: #DFFF00;
+          background: rgba(223, 255, 0, 0.12);
         }
 
         .cc-action-item.cc-item-ai .cc-item-icon {
-          background: rgba(2, 132, 199, 0.25);
-          color: #38bdf8;
+          background: rgba(223, 255, 0, 0.2);
+          color: #DFFF00;
         }
 
         .cc-item-body {
@@ -292,24 +292,24 @@
 
         .cc-item-title {
           font-size: 12.5px;
-          font-weight: 550;
+          font-weight: 600;
           color: #ffffff;
           line-height: 1.2;
         }
 
         .cc-item-desc {
           font-size: 10.5px;
-          color: #94a3b8;
+          color: #71717a;
           margin-top: 1px;
         }
 
         .cc-item-badge {
           font-size: 9.5px;
-          font-weight: 600;
+          font-weight: 700;
           padding: 2px 6px;
           border-radius: 4px;
-          background: rgba(255, 107, 53, 0.16);
-          color: #ff6b35;
+          background: rgba(223, 255, 0, 0.14);
+          color: #DFFF00;
           letter-spacing: 0.02em;
           text-transform: uppercase;
         }
@@ -320,14 +320,14 @@
           justify-content: space-between;
           padding: 7px 14px 9px;
           border-top: 1px solid rgba(255, 255, 255, 0.06);
-          background: rgba(0, 0, 0, 0.25);
+          background: rgba(0, 0, 0, 0.3);
           font-size: 10px;
-          color: #64748b;
+          color: #71717a;
         }
 
         .cc-sidepanel-hint {
-          color: #38bdf8;
-          font-weight: 500;
+          color: #DFFF00;
+          font-weight: 600;
           display: flex;
           align-items: center;
           gap: 2px;
@@ -339,12 +339,12 @@
           display: flex;
           align-items: center;
           gap: 8px;
-          background: rgba(2, 132, 199, 0.18);
-          border: 1px solid rgba(2, 132, 199, 0.45);
+          background: rgba(223, 255, 0, 0.14);
+          border: 1px solid rgba(223, 255, 0, 0.4);
           border-radius: 12px;
-          color: #38bdf8;
+          color: #DFFF00;
           font-size: 12px;
-          font-weight: 600;
+          font-weight: 650;
           animation: ccPopIn 0.14s ease forwards;
         }
       </style>
@@ -449,7 +449,7 @@
 
         <div class="cc-actions-list">
           <button class="cc-action-item" data-action="highlight">
-            <div class="cc-item-icon" style="color: #ff6b35;">
+            <div class="cc-item-icon" style="color: #DFFF00;">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="m9 11-6 6v3h3l6-6"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/>
               </svg>
@@ -462,7 +462,7 @@
           </button>
 
           <button class="cc-action-item" data-action="note">
-            <div class="cc-item-icon" style="color: #38bdf8;">
+            <div class="cc-item-icon" style="color: #ffffff;">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
               </svg>
@@ -474,7 +474,7 @@
           </button>
 
           <button class="cc-action-item" data-action="question">
-            <div class="cc-item-icon" style="color: #ff6b35;">
+            <div class="cc-item-icon" style="color: #DFFF00;">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
               </svg>
@@ -487,7 +487,7 @@
 
           <button class="cc-action-item cc-item-ai" data-action="ask-ai">
             <div class="cc-item-icon">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#DFFF00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>
               </svg>
             </div>
@@ -495,7 +495,7 @@
               <div class="cc-item-title">Ask AI / Explain</div>
               <div class="cc-item-desc">Get instant grounded answer</div>
             </div>
-            <span class="cc-item-badge" style="background: rgba(2, 132, 199, 0.2); color: #38bdf8;">AI ↗</span>
+            <span class="cc-item-badge">AI ↗</span>
           </button>
 
           <button class="cc-action-item" data-action="copy">
