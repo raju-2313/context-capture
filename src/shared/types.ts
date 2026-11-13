@@ -116,6 +116,7 @@ export interface ProjectRecord {
   project_id: string;
   title: string;
   description: string | null;
+  accent_color?: string | null;
   status: "active" | "archived";
   created_at: string;
   updated_at: string;

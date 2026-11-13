@@ -3,13 +3,14 @@ import { ProjectRecord, ProjectMembershipRecord, Capture, generateId, nowISO } f
 import { captures as capRepo } from "./captures";
 
 export class ProjectRepository {
-  async create(input: { title: string; description?: string }): Promise<ProjectRecord> {
+  async create(input: { title: string; description?: string; accent_color?: string }): Promise<ProjectRecord> {
     const id = generateId();
     const now = nowISO();
     const record: ProjectRecord = {
       project_id: id,
       title: input.title.trim(),
       description: input.description?.trim() || null,
+      accent_color: input.accent_color || "#DFFF00",
       status: "active",
       created_at: now,
       updated_at: now,

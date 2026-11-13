@@ -1,45 +1,137 @@
 import { useState, useEffect } from "preact/hooks";
-import { projects as projRepo, captures as capRepo } from "../../../data/repositories";
+import { projects as projRepo, captures as capRepo, contexts as ctxRepo } from "../../../data/repositories";
+import { contextLifecycle } from "../../../core/context/lifecycle";
 import { ProjectRecord, Capture } from "../../../shared/types";
 import { CaptureCard } from "../../components/CaptureCard";
 import { exportEngine } from "../../../core/export";
-import { PlusIcon, ExportIcon } from "../../components/Icons";
+import { PlusIcon, ExportIcon, EditIcon, FolderIcon, CheckIcon, CloseIcon } from "../../components/Icons";
+
+const LayersIcon = ({ size = 12 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="12 2 2 7 12 12 22 7 12 2" />
+    <polyline points="2 17 12 22 22 17" />
+    <polyline points="2 12 12 17 22 12" />
+  </svg>
+);
+
+const ACCENT_COLORS = [
+  { name: "Lime", hex: "#DFFF00" },
+  { name: "Blue", hex: "#38bdf8" },
+  { name: "Purple", hex: "#a855f7" },
+  { name: "Red", hex: "#f43f5e" },
+  { name: "Emerald", hex: "#10b981" },
+];
 
 export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: string) => void } = {}) {
   const [projectList, setProjectList] = useState<ProjectRecord[]>([]);
+  const [projectCounts, setProjectCounts] = useState<Record<string, number>>({});
   const [selectedProject, setSelectedProject] = useState<ProjectRecord | null>(null);
   const [projectCaptures, setProjectCaptures] = useState<Capture[]>([]);
-  const [newTitle, setNewTitle] = useState("");
-  const [newDesc, setNewDesc] = useState("");
-  const [showCreate, setShowCreate] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { loadProjects(); }, []);
+  // Create form state
+  const [showCreate, setShowCreate] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newDesc, setNewDesc] = useState("");
+  const [newAccent, setNewAccent] = useState("#DFFF00");
+
+  // Inline edit state
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+
+  // Add context/captures modal state
+  const [modalProject, setModalProject] = useState<ProjectRecord | null>(null);
+  const [activeTabContext, setActiveTabContext] = useState<{ id: string; title: string; count: number } | null>(null);
+  const [libraryContexts, setLibraryContexts] = useState<Array<{ id: string; title: string; count: number }>>([]);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  function showToast(msg: string) {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 2500);
+  }
 
   async function loadProjects() {
-    try { setProjectList(await projRepo.list()); }
-    catch (e) { console.error("Failed to load projects", e); }
-    finally { setLoading(false); }
+    try {
+      const list = await projRepo.list();
+      setProjectList(list);
+
+      const counts: Record<string, number> = {};
+      await Promise.all(
+        list.map(async (p) => {
+          const caps = await projRepo.listMemberships(p.project_id);
+          counts[p.project_id] = caps.length;
+        })
+      );
+      setProjectCounts(counts);
+    } catch (e) {
+      console.error("Failed to load projects", e);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function openProject(p: ProjectRecord) {
-    setSelectedProject(p); setLoading(true);
-    try { setProjectCaptures(await projRepo.listCaptures(p.project_id)); }
-    catch (e) { console.error("Failed to load project captures", e); }
-    finally { setLoading(false); }
+    setSelectedProject(p);
+    setLoading(true);
+    try {
+      const caps = await projRepo.listCaptures(p.project_id);
+      setProjectCaptures(caps);
+    } catch (e) {
+      console.error("Failed to load project captures", e);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function createProject() {
     if (!newTitle.trim()) return;
-    const p = await projRepo.create({ title: newTitle, description: newDesc });
-    setNewTitle(""); setNewDesc(""); setShowCreate(false);
-    await loadProjects(); await openProject(p);
+    const p = await projRepo.create({
+      title: newTitle,
+      description: newDesc,
+      accent_color: newAccent,
+    });
+    setNewTitle("");
+    setNewDesc("");
+    setNewAccent("#DFFF00");
+    setShowCreate(false);
+    showToast(`✓ Project "${p.title}" created`);
+    await loadProjects();
+  }
+
+  async function startEditing(p: ProjectRecord, e: Event) {
+    e.stopPropagation();
+    setEditingProjectId(p.project_id);
+    setEditTitle(p.title);
+    setEditDesc(p.description || "");
+  }
+
+  async function saveEditing(projectId: string) {
+    if (!editTitle.trim()) return;
+    await projRepo.update(projectId, {
+      title: editTitle.trim(),
+      description: editDesc.trim() || null,
+    });
+    setEditingProjectId(null);
+    showToast("✓ Project updated");
+    await loadProjects();
+    if (selectedProject?.project_id === projectId) {
+      const updated = await projRepo.get(projectId);
+      if (updated) setSelectedProject(updated);
+    }
   }
 
   async function removeCapture(captureId: string) {
     if (!selectedProject) return;
     await projRepo.removeCapture(selectedProject.project_id, captureId);
-    setProjectCaptures(await projRepo.listCaptures(selectedProject.project_id));
+    const updated = await projRepo.listCaptures(selectedProject.project_id);
+    setProjectCaptures(updated);
+    setProjectCounts((prev) => ({ ...prev, [selectedProject.project_id]: updated.length }));
+    showToast("Capture removed from project");
   }
 
   async function exportProject() {
@@ -50,47 +142,151 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
     const a = document.createElement("a");
     a.href = url;
     a.download = `${selectedProject.title.toLowerCase().replace(/[^a-z0-9]/g, "-")}-export.md`;
-    a.click(); URL.revokeObjectURL(url);
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
-  if (loading) return (
-    <div class="sp-loading">
-      <span class="sp-loading-dot" /><span class="sp-loading-dot" /><span class="sp-loading-dot" />
-    </div>
-  );
+  /* ── Add Context / Captures Modal ── */
+  async function openAddModal(p: ProjectRecord, e?: Event) {
+    if (e) e.stopPropagation();
+    setModalProject(p);
 
-  /* ── Project Detail ── */
+    try {
+      // 1. Query active tab context
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab?.id && tab?.windowId) {
+        try {
+          const cid = await contextLifecycle.getOrCreateForTab(tab.id, tab.windowId);
+          const ctx = await ctxRepo.get(cid);
+          const caps = await capRepo.listByContext(cid);
+          setActiveTabContext({
+            id: cid,
+            title: ctx?.title || tab.title || "Current Tab",
+            count: caps.length,
+          });
+        } catch {
+          setActiveTabContext(null);
+        }
+      } else {
+        setActiveTabContext(null);
+      }
+
+      // 2. Query library contexts
+      const allCtxs = await ctxRepo.list({ status: "active" });
+      const ctxsWithCounts = await Promise.all(
+        allCtxs.map(async (c: any) => {
+          const caps = await capRepo.listByContext(c.context_id);
+          return { id: c.context_id, title: c.title || "Untitled Context", count: caps.length };
+        })
+      );
+      setLibraryContexts(ctxsWithCounts);
+    } catch (err) {
+      console.error("Failed to load context choices", err);
+    }
+  }
+
+  async function addContextToProject(contextId: string, contextTitle: string) {
+    if (!modalProject) return;
+    try {
+      const caps = await capRepo.listByContext(contextId);
+      if (caps.length === 0) {
+        showToast(`No captures found in "${contextTitle}"`);
+        return;
+      }
+      let added = 0;
+      for (const c of caps) {
+        await projRepo.addCapture(modalProject.project_id, c.capture_id);
+        added++;
+      }
+      const memberships = await projRepo.listMemberships(modalProject.project_id);
+      setProjectCounts((prev) => ({ ...prev, [modalProject.project_id]: memberships.length }));
+      if (selectedProject?.project_id === modalProject.project_id) {
+        setProjectCaptures(await projRepo.listCaptures(modalProject.project_id));
+      }
+      showToast(`✓ Added ${added} captures from "${contextTitle}"`);
+    } catch (err) {
+      console.error("Failed to add context captures", err);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div class="sp-loading">
+        <span class="sp-loading-dot" />
+        <span class="sp-loading-dot" />
+        <span class="sp-loading-dot" />
+      </div>
+    );
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     PROJECT DETAIL VIEW (When user clicked "View Captures")
+     ═══════════════════════════════════════════════════════════ */
   if (selectedProject) {
+    const bannerColor = selectedProject.accent_color || "#DFFF00";
     return (
       <div class="tt-root">
-        <div class="proj-detail-header">
-          <button class="cc-action-btn" style={{ gap: 4 }} onClick={() => { setSelectedProject(null); loadProjects(); }}>
+        {/* Top nav */}
+        <div class="proj-header" style={{ marginBottom: 12 }}>
+          <button
+            class="proj-cancel-btn"
+            onClick={() => {
+              setSelectedProject(null);
+              loadProjects();
+            }}
+          >
             ← All Projects
           </button>
-          <button
-            class="tt-submit-btn"
-            onClick={exportProject}
-            disabled={projectCaptures.length === 0}
-            style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
-          >
-            <ExportIcon size={13} /> Export MD
-          </button>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button
+              class="proj-new-btn"
+              onClick={(e) => openAddModal(selectedProject, e)}
+              style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
+            >
+              <PlusIcon size={12} /> Add Context
+            </button>
+            <button
+              class="proj-cancel-btn"
+              onClick={exportProject}
+              disabled={projectCaptures.length === 0}
+              style={{ display: "inline-flex", alignItems: "center", gap: 5 }}
+            >
+              <ExportIcon size={12} /> Export MD
+            </button>
+          </div>
         </div>
 
-        <div class="cc-card-banner">{selectedProject.title.toUpperCase()}</div>
-        <div class="cc-card-body" style={{ paddingTop: 10 }}>
+        {/* Project Hero Banner */}
+        <div class="proj-card-banner" style={{ background: bannerColor }}>
+          <span class="proj-card-banner-title">{selectedProject.title.toUpperCase()}</span>
+          <span class="proj-card-banner-items">{projectCaptures.length} items</span>
+        </div>
+
+        <div class="proj-card-body" style={{ background: "#0d0d10", border: "1px solid rgba(255,255,255,0.08)", borderTop: "none", borderRadius: "0 0 10px 10px", marginBottom: 16 }}>
           {selectedProject.description && (
-            <p class="tt-empty-desc" style={{ textAlign: "left", maxWidth: "none", marginBottom: 4 }}>
+            <p class="proj-card-desc" style={{ marginBottom: 6 }}>
               {selectedProject.description}
             </p>
           )}
-          <div class="cc-card-domain">{projectCaptures.length} captures curated</div>
+          <span style={{ fontSize: 11, color: "var(--lime)", fontWeight: 600 }}>
+            Curated research workspace
+          </span>
         </div>
 
+        {/* Captures in this project */}
         {projectCaptures.length === 0 ? (
           <div class="tt-empty" style={{ paddingTop: 20 }}>
-            <div class="tt-ready-badge" style={{ borderStyle: "dashed" }}>No captures yet</div>
-            <p class="tt-empty-desc">Open any capture in Tab or Library and click "+ Project" to add it here.</p>
+            <div class="tt-ready-badge" style={{ borderStyle: "dashed" }}>No captures in project</div>
+            <p class="tt-empty-desc">
+              Click <strong>"+ Add Context"</strong> above to import captures from your active tab or saved library contexts.
+            </p>
+            <button
+              class="proj-new-btn"
+              style={{ marginTop: 12 }}
+              onClick={(e) => openAddModal(selectedProject, e)}
+            >
+              <PlusIcon size={12} /> Import from Tab or Library
+            </button>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -105,80 +301,312 @@ export default function ProjectsView({ onViewDetail }: { onViewDetail?: (id: str
           </div>
         )}
 
+        {/* Add Context / Captures Modal */}
+        {modalProject && (
+          <div class="proj-modal-overlay" onClick={() => setModalProject(null)}>
+            <div class="proj-modal" onClick={(e) => e.stopPropagation()}>
+              <div class="proj-modal-header">
+                <div>
+                  <div class="proj-modal-title">Add to {modalProject.title}</div>
+                  <div class="proj-modal-subtitle">Import captures from active tab or your research library</div>
+                </div>
+                <button class="proj-modal-close" onClick={() => setModalProject(null)}>✕</button>
+              </div>
+
+              {/* Active Tab Option */}
+              {activeTabContext && (
+                <div>
+                  <div class="proj-modal-section-title">ACTIVE TAB CONTEXT</div>
+                  <div class="proj-modal-item">
+                    <div class="proj-modal-item-info">
+                      <span class="proj-modal-item-name">⚡ {activeTabContext.title}</span>
+                      <span class="proj-modal-item-meta">{activeTabContext.count} captures available on active tab</span>
+                    </div>
+                    <button
+                      class="proj-modal-add-btn"
+                      onClick={() => addContextToProject(activeTabContext.id, activeTabContext.title)}
+                    >
+                      <PlusIcon size={11} /> Add Context
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Library Contexts Option */}
+              <div>
+                <div class="proj-modal-section-title">SAVED LIBRARY CONTEXTS</div>
+                {libraryContexts.length === 0 ? (
+                  <div style={{ fontSize: 11.5, color: "#71717a", padding: "8px 0" }}>
+                    No other saved contexts found in library.
+                  </div>
+                ) : (
+                  libraryContexts.map((ctx) => (
+                    <div key={ctx.id} class="proj-modal-item">
+                      <div class="proj-modal-item-info">
+                        <span class="proj-modal-item-name">{ctx.title}</span>
+                        <span class="proj-modal-item-meta">{ctx.count} captures</span>
+                      </div>
+                      <button
+                        class="proj-modal-add-btn"
+                        onClick={() => addContextToProject(ctx.id, ctx.title)}
+                      >
+                        <PlusIcon size={11} /> Add Context
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Toast Feedback */}
+        {toastMessage && <div class="proj-toast">{toastMessage}</div>}
+
+        {/* Statusbar */}
         <div class="tt-statusbar">
-          <span class="tt-status-left"><span class="tt-status-dot" /> Sync Active</span>
-          <span class="tt-status-right">v2.4</span>
+          <span class="tt-status-left"><span class="tt-status-dot" /> Cloud Sync Connected</span>
+          <span class="tt-status-right">v2.4 Pro</span>
         </div>
       </div>
     );
   }
 
-  /* ── Project List ── */
+  /* ═══════════════════════════════════════════════════════════
+     PROJECT LIST VIEW (Matching Reference Screenshot)
+     ═══════════════════════════════════════════════════════════ */
   return (
     <div class="tt-root">
-      <div class="proj-list-header">
-        <div class="tt-context-label">
-          <span class="tt-live-dot" />
-          <span class="tt-context-name">PROJECTS</span>
+      {/* ── Header ─────────────────────────────────────────── */}
+      <div class="proj-header">
+        <div class="proj-title-wrap">
+          <span class="proj-live-dot" />
+          <span class="proj-title-text">PROJECTS</span>
+          <span class="proj-count-badge">{projectList.length}</span>
         </div>
-        <button class="tt-submit-btn" onClick={() => setShowCreate(!showCreate)} style={{ display: "inline-flex", gap: 5, alignItems: "center" }}>
-          <PlusIcon size={12} /> {showCreate ? "Cancel" : "New"}
-        </button>
+        {showCreate ? (
+          <button class="proj-cancel-btn" onClick={() => setShowCreate(false)}>
+            ✕ Cancel
+          </button>
+        ) : (
+          <button class="proj-new-btn" onClick={() => setShowCreate(true)}>
+            <PlusIcon size={12} /> New Project
+          </button>
+        )}
       </div>
 
-      {/* Create Form */}
+      {/* ── Create Project Form (Matches Reference Screenshot) ─ */}
       {showCreate && (
-        <div class="proj-create-card">
-          <input
-            class="lib-search-input"
-            style={{ background: "transparent", border: "none", outline: "none", padding: "0 0 8px 0", borderBottom: "1px solid rgba(255,255,255,0.08)", color: "#fff", fontSize: 13, width: "100%" }}
-            placeholder="Project title (e.g. EV Battery Tech)..."
-            value={newTitle}
-            onInput={(e) => setNewTitle(e.currentTarget.value)}
-            autoFocus
-          />
-          <textarea
-            style={{ background: "transparent", border: "none", outline: "none", color: "#a1a1aa", fontSize: 12, resize: "none", width: "100%", marginTop: 8 }}
-            placeholder="Optional description..."
-            rows={2}
-            value={newDesc}
-            onInput={(e: any) => setNewDesc(e.target.value)}
-          />
-          <button class="tt-submit-btn" style={{ marginTop: 8, alignSelf: "flex-end" }} onClick={createProject} disabled={!newTitle.trim()}>
-            Create Project
+        <div class="proj-form-card">
+          <div class="proj-form-group">
+            <label class="proj-form-label">PROJECT TITLE *</label>
+            <input
+              class="proj-form-input"
+              placeholder="Project title (e.g. EV Battery Tech)..."
+              value={newTitle}
+              onInput={(e) => setNewTitle(e.currentTarget.value)}
+              autoFocus
+            />
+          </div>
+
+          <div class="proj-form-group">
+            <label class="proj-form-label">DESCRIPTION</label>
+            <textarea
+              class="proj-form-textarea"
+              placeholder="Optional description or project goals..."
+              rows={2}
+              value={newDesc}
+              onInput={(e) => setNewDesc(e.currentTarget.value)}
+            />
+          </div>
+
+          <div class="proj-accent-row">
+            <label class="proj-form-label" style={{ marginBottom: 0 }}>TAG ACCENT</label>
+            <div class="proj-color-swatches">
+              {ACCENT_COLORS.map((c) => (
+                <button
+                  key={c.hex}
+                  type="button"
+                  class={`proj-color-dot ${newAccent === c.hex ? "active" : ""}`}
+                  style={{ background: c.hex }}
+                  onClick={() => setNewAccent(c.hex)}
+                  title={c.name}
+                />
+              ))}
+            </div>
+          </div>
+
+          <button
+            class="proj-create-btn"
+            onClick={createProject}
+            disabled={!newTitle.trim()}
+          >
+            <FolderIcon size={14} color="#000000" /> Create Project
           </button>
         </div>
       )}
 
-      {/* Project List */}
+      {/* ── Projects List ──────────────────────────────────── */}
       {projectList.length === 0 ? (
         <div class="tt-empty" style={{ paddingTop: 20 }}>
           <div class="tt-ready-badge" style={{ borderStyle: "dashed" }}>No projects yet</div>
-          <p class="tt-empty-desc">Projects let you curate captures across tabs into one focused topic.</p>
+          <p class="tt-empty-desc">
+            Organize related research, notes, and web captures into dedicated topic workspaces.
+          </p>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-          {projectList.map((p) => (
-            <div key={p.project_id} class="ctx-card" style={{ cursor: "pointer" }} onClick={() => openProject(p)}>
-              <div class="cc-card-banner">PROJECT</div>
-              <div class="cc-card-body">
-                <div class="cc-card-title">{p.title}</div>
-                {p.description && <div class="cc-card-domain">{p.description}</div>}
-                <div class="cc-card-actions" style={{ marginTop: 6 }}>
-                  <div class="cc-actions-left" />
-                  <span class="cc-action-date">
-                    Created {new Date(p.created_at).toLocaleDateString()} · View captures →
-                  </span>
+          {projectList.map((p) => {
+            const count = projectCounts[p.project_id] ?? 0;
+            const bannerColor = p.accent_color || "#DFFF00";
+            const isEditing = editingProjectId === p.project_id;
+
+            return (
+              <div key={p.project_id} class="proj-card">
+                {/* Full-width top banner */}
+                <div class="proj-card-banner" style={{ background: bannerColor }}>
+                  <span class="proj-card-banner-title">PROJECT</span>
+                  <span class="proj-card-banner-items">{count} items</span>
+                </div>
+
+                {/* Card body */}
+                <div class="proj-card-body">
+                  {isEditing ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "4px 0" }}>
+                      <input
+                        class="proj-form-input"
+                        value={editTitle}
+                        onInput={(e) => setEditTitle(e.currentTarget.value)}
+                        placeholder="Project title..."
+                      />
+                      <textarea
+                        class="proj-form-textarea"
+                        rows={2}
+                        value={editDesc}
+                        onInput={(e) => setEditDesc(e.currentTarget.value)}
+                        placeholder="Project description..."
+                      />
+                      <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                        <button class="proj-cancel-btn" onClick={() => setEditingProjectId(null)}>
+                          Cancel
+                        </button>
+                        <button class="proj-new-btn" onClick={() => saveEditing(p.project_id)}>
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div class="proj-card-title">{p.title}</div>
+                      {p.description && <div class="proj-card-desc">{p.description}</div>}
+
+                      {/* Action buttons row */}
+                      <div class="proj-card-actions">
+                        <div class="proj-actions-left">
+                          <button
+                            class="proj-view-btn"
+                            onClick={() => openProject(p)}
+                            title="View captures in this project"
+                          >
+                            <LayersIcon size={13} /> View Captures
+                          </button>
+
+                          <button
+                            class="proj-icon-btn"
+                            onClick={(e) => openAddModal(p, e)}
+                            title="Add context or captures to this project"
+                          >
+                            <PlusIcon size={12} />
+                          </button>
+
+                          <button
+                            class="proj-icon-btn"
+                            onClick={(e) => startEditing(p, e)}
+                            title="Edit project details"
+                          >
+                            <EditIcon size={12} />
+                          </button>
+                        </div>
+
+                        <span class="proj-date">
+                          Created {new Date(p.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
+      {/* ── Add Context / Captures Modal ────────────────────── */}
+      {modalProject && (
+        <div class="proj-modal-overlay" onClick={() => setModalProject(null)}>
+          <div class="proj-modal" onClick={(e) => e.stopPropagation()}>
+            <div class="proj-modal-header">
+              <div>
+                <div class="proj-modal-title">Add Context to "{modalProject.title}"</div>
+                <div class="proj-modal-subtitle">Select a research context from active tab or library</div>
+              </div>
+              <button class="proj-modal-close" onClick={() => setModalProject(null)}>✕</button>
+            </div>
+
+            {/* Active Tab Option */}
+            {activeTabContext && (
+              <div>
+                <div class="proj-modal-section-title">CURRENT TAB CONTEXT</div>
+                <div class="proj-modal-item">
+                  <div class="proj-modal-item-info">
+                    <span class="proj-modal-item-name">⚡ {activeTabContext.title}</span>
+                    <span class="proj-modal-item-meta">{activeTabContext.count} captures available on active tab</span>
+                  </div>
+                  <button
+                    class="proj-modal-add-btn"
+                    onClick={() => addContextToProject(activeTabContext.id, activeTabContext.title)}
+                  >
+                    <PlusIcon size={11} /> Add Context
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Library Contexts Option */}
+            <div>
+              <div class="proj-modal-section-title">SAVED LIBRARY CONTEXTS</div>
+              {libraryContexts.length === 0 ? (
+                <div style={{ fontSize: 11.5, color: "#71717a", padding: "8px 0" }}>
+                  No saved contexts found in library.
+                </div>
+              ) : (
+                libraryContexts.map((ctx) => (
+                  <div key={ctx.id} class="proj-modal-item">
+                    <div class="proj-modal-item-info">
+                      <span class="proj-modal-item-name">{ctx.title}</span>
+                      <span class="proj-modal-item-meta">{ctx.count} captures</span>
+                    </div>
+                    <button
+                      class="proj-modal-add-btn"
+                      onClick={() => addContextToProject(ctx.id, ctx.title)}
+                    >
+                      <PlusIcon size={11} /> Add Context
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Feedback */}
+      {toastMessage && <div class="proj-toast">{toastMessage}</div>}
+
+      {/* ── Statusbar ──────────────────────────────────────── */}
       <div class="tt-statusbar">
-        <span class="tt-status-left"><span class="tt-status-dot" /> Sync Active</span>
-        <span class="tt-status-right">v2.4</span>
+        <span class="tt-status-left"><span class="tt-status-dot" /> Cloud Sync Connected</span>
+        <span class="tt-status-right">v2.4 Pro</span>
       </div>
     </div>
   );
