@@ -2901,3 +2901,384 @@ input:focus, select:focus, textarea:focus {
   font-size: 10.5px;
   color: #52525b;
 }
+
+
+/* ═══════════════════════════════════════════════════════════
+   POPUP — Quick-Add  (.pq-*)
+   Premium Obsidian Black + Cyber Chartreuse #DFFF00
+   Width: 340px fixed · No scroll · No gradients
+   ═══════════════════════════════════════════════════════════ */
+
+.pq-root {
+  display: flex;
+  flex-direction: column;
+  width: 340px;
+  background: #09090b;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+  font-size: 12.5px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+.pq-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.pq-brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.pq-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #DFFF00;
+  box-shadow: 0 0 8px rgba(223, 255, 0, 0.6);
+  flex-shrink: 0;
+}
+
+.pq-brand-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.pq-pro-badge {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #000000;
+  background: #DFFF00;
+  padding: 1px 5px;
+  border-radius: 3px;
+  line-height: 1.6;
+}
+
+.pq-header-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.pq-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  color: #52525b;
+  cursor: pointer;
+  transition: color 0.12s, background 0.12s;
+}
+.pq-icon-btn:hover { color: #ffffff; background: rgba(255, 255, 255, 0.07); }
+
+/* ── Page strip ─────────────────────────────────────────── */
+.pq-page-strip {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 7px 12px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: #0d0d10;
+}
+
+.pq-page-dot {
+  font-size: 6px;
+  color: #DFFF00;
+  margin-top: 4px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.pq-page-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.pq-page-title {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #e4e4e7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+.pq-page-domain {
+  font-size: 10.5px;
+  color: #52525b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Stats row ──────────────────────────────────────────── */
+.pq-stats-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pq-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #a1a1aa;
+  font-size: 10.5px;
+  font-weight: 500;
+}
+
+.pq-stat-chip svg { color: #52525b; }
+
+.pq-stat-num {
+  font-size: 11px;
+  font-weight: 700;
+  color: #DFFF00;
+}
+
+.pq-stat-label { color: #71717a; }
+
+/* ── Type toggle row ────────────────────────────────────── */
+.pq-type-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px 4px;
+  gap: 8px;
+}
+
+.pq-toggle-group {
+  display: flex;
+  gap: 2px;
+  background: #111114;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 7px;
+  padding: 2px;
+}
+
+.pq-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #52525b;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.1s, background 0.1s;
+  line-height: 1.6;
+}
+.pq-toggle:hover { color: #a1a1aa; }
+.pq-toggle--active {
+  background: #DFFF00;
+  color: #000000 !important;
+  font-weight: 700;
+}
+
+.pq-kbd-hint {
+  font-size: 9.5px;
+  color: #3f3f46;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+/* ── Composer ───────────────────────────────────────────── */
+.pq-composer-wrap {
+  margin: 4px 12px 0;
+  background: #111114;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.pq-composer-wrap:focus-within { border-color: rgba(223, 255, 0, 0.35); }
+
+.pq-composer {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #e4e4e7;
+  font-size: 12.5px;
+  font-family: inherit;
+  line-height: 1.55;
+  padding: 9px 10px 6px;
+  resize: none;
+  box-sizing: border-box;
+}
+
+.pq-composer::placeholder { color: #3f3f46; }
+
+.pq-composer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pq-char-count {
+  font-size: 10px;
+  color: #3f3f46;
+  font-variant-numeric: tabular-nums;
+}
+
+.pq-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #DFFF00;
+  color: #000000;
+  transition: opacity 0.12s, transform 0.1s;
+  line-height: 1.5;
+}
+.pq-save-btn:disabled { opacity: 0.35; cursor: default; transform: none; }
+.pq-save-btn:not(:disabled):hover { opacity: 0.88; }
+.pq-save-btn--done { background: #22c55e; color: #ffffff; }
+
+/* ── Section label ──────────────────────────────────────── */
+.pq-section-label {
+  padding: 10px 12px 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #3f3f46;
+}
+
+/* ── Action grid ────────────────────────────────────────── */
+.pq-action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 5px;
+  padding: 0 12px 10px;
+}
+
+.pq-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 9px 4px 8px;
+  background: #111114;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  color: #71717a;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+  line-height: 1.3;
+}
+.pq-action-btn svg { color: #DFFF00; }
+.pq-action-btn span { color: #71717a; }
+.pq-action-btn:hover {
+  border-color: rgba(223, 255, 0, 0.3);
+  background: rgba(223, 255, 0, 0.04);
+  color: #a1a1aa;
+}
+.pq-action-btn:hover span { color: #e4e4e7; }
+.pq-action-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── Keyboard shortcuts panel ───────────────────────────── */
+.pq-kbd-panel {
+  margin: 0 12px 8px;
+  background: #0d0d10;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 7px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pq-kbd-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10.5px;
+}
+
+.pq-kbd-row span { color: #52525b; }
+
+.pq-kbd-row kbd {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 5px;
+  background: #1a1a1e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 9.5px;
+  color: #a1a1aa;
+  letter-spacing: 0.03em;
+}
+
+/* ── Footer nav ─────────────────────────────────────────── */
+.pq-footer {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 10px 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.pq-footer-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #71717a;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+  line-height: 1.5;
+}
+.pq-footer-btn:hover {
+  color: #e4e4e7;
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.pq-footer-btn--muted { border-color: transparent; }
+.pq-footer-btn--muted:hover { border-color: rgba(255, 255, 255, 0.07); }
+
+.pq-footer-divider {
+  flex: 1;
+}
