@@ -68,6 +68,32 @@ describe("speech-to-text provider", () => {
     expect(onResult).toHaveBeenCalledWith({ transcript: "hello again", isFinal: true });
   });
 
+  it("retries one transient network failure, then reports actionable service guidance", () => {
+    const provider = new WebSpeechProvider();
+    const onError = vi.fn();
+    provider.start({ onError });
+
+    const first = FakeRecognition.instances[0];
+    first.onerror?.({ error: "network" });
+    expect(onError).toHaveBeenNthCalledWith(1, expect.objectContaining({ code: "network", fatal: false }));
+    first.onend?.();
+    vi.advanceTimersByTime(250);
+
+    const second = FakeRecognition.instances[1];
+    second.onerror?.({ error: "network" });
+    expect(onError).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        code: "network",
+        fatal: true,
+        message: expect.stringContaining("Brave"),
+      }),
+    );
+    second.onend?.();
+    vi.advanceTimersByTime(4000);
+    expect(FakeRecognition.instances).toHaveLength(2);
+  });
+
   it("notifies the integration on explicit stop without restarting", () => {
     const provider = new WebSpeechProvider();
     const onEnd = vi.fn();
@@ -98,6 +124,21 @@ describe("speech-to-text provider", () => {
     const provider = createSttProvider("whisper-cloud");
     expect(provider.isSupported()).toBe(false);
     expect(() => provider.start()).toThrow("not implemented");
+  });
+
+  it("explains when Web Speech is unsupported instead of blaming connectivity", () => {
+    Object.defineProperty(window, "SpeechRecognition", { configurable: true, value: undefined });
+    Object.defineProperty(window, "webkitSpeechRecognition", { configurable: true, value: undefined });
+    const provider = new WebSpeechProvider();
+    const onError = vi.fn();
+
+    provider.start({ onError });
+
+    expect(onError).toHaveBeenCalledWith({
+      code: "unsupported",
+      message: expect.stringContaining("Chrome"),
+      fatal: true,
+    });
   });
 
   describe("voice note integration", () => {

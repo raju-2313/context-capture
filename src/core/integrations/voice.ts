@@ -99,6 +99,7 @@ export class VoiceNoteIntegration {
 
   private handleError(error: SttError): void {
     if (error.code === "no-speech") return;
+    if (!error.fatal) return;
     this.manuallyStopped = true;
     this.terminalError = error.message;
     this.onUpdate?.({

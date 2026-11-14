@@ -76,10 +76,10 @@ const ERROR_MESSAGES: Record<SttErrorCode, string> = {
   "not-allowed": "Microphone permission was denied.",
   "service-not-allowed": "Speech recognition is not allowed in this browser.",
   "audio-capture": "No microphone was found.",
-  network: "Speech recognition needs a network connection.",
+  network: "The browser speech service could not be reached. Check microphone permissions and, in Brave, try allowing this site and turning off Shields for it. Chrome/Chromium may also need access to its speech service.",
   "no-speech": "No speech detected.",
   aborted: "Speech recognition was stopped.",
-  unsupported: "Speech recognition is not supported in this browser.",
+  unsupported: "Voice input is not supported in this browser. Try Chrome or another Chromium browser with Web Speech enabled.",
   unknown: "Speech recognition failed.",
 };
 
@@ -99,12 +99,14 @@ function normalizeError(error: string | undefined): SttError {
 export class WebSpeechProvider implements SttProvider {
   readonly kind = "web-speech" as const;
   private static readonly MAX_NO_SPEECH_RETRIES = 5;
+  private static readonly MAX_NETWORK_RETRIES = 2;
   private static readonly MAX_RESTART_DELAY_MS = 4000;
   private recognition: SpeechRecognitionLike | null = null;
   private shouldRestart = false;
   private restartTimer: number | null = null;
   private options: SttProviderOptions = {};
   private noSpeechRetries = 0;
+  private networkRetries = 0;
 
   isSupported(): boolean {
     const speechWindow = typeof window === "undefined" ? null : window as SpeechRecognitionWindow;
@@ -120,6 +122,7 @@ export class WebSpeechProvider implements SttProvider {
     this.options = options;
     this.shouldRestart = true;
     this.noSpeechRetries = 0;
+    this.networkRetries = 0;
     this.clearRestartTimer();
     this.startRecognition();
   }
@@ -156,6 +159,7 @@ export class WebSpeechProvider implements SttProvider {
       for (let index = event.resultIndex; index < event.results.length; index += 1) {
         const result = event.results[index];
         this.noSpeechRetries = 0;
+        this.networkRetries = 0;
         this.options.onResult?.({
           transcript: result[0]?.transcript || "",
           isFinal: result.isFinal,
@@ -170,6 +174,13 @@ export class WebSpeechProvider implements SttProvider {
           this.shouldRestart = false;
           this.options.onError?.({ ...error, fatal: true });
         }
+        return;
+      }
+      if (error.code === "network") {
+        this.networkRetries += 1;
+        const isTerminal = this.networkRetries >= WebSpeechProvider.MAX_NETWORK_RETRIES;
+        this.shouldRestart = !isTerminal;
+        this.options.onError?.({ ...error, fatal: isTerminal });
         return;
       }
       this.options.onError?.(error);
