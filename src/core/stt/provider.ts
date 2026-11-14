@@ -98,10 +98,13 @@ function normalizeError(error: string | undefined): SttError {
 
 export class WebSpeechProvider implements SttProvider {
   readonly kind = "web-speech" as const;
+  private static readonly MAX_NO_SPEECH_RETRIES = 5;
+  private static readonly MAX_RESTART_DELAY_MS = 4000;
   private recognition: SpeechRecognitionLike | null = null;
   private shouldRestart = false;
   private restartTimer: number | null = null;
   private options: SttProviderOptions = {};
+  private noSpeechRetries = 0;
 
   isSupported(): boolean {
     const speechWindow = typeof window === "undefined" ? null : window as SpeechRecognitionWindow;
@@ -116,6 +119,7 @@ export class WebSpeechProvider implements SttProvider {
 
     this.options = options;
     this.shouldRestart = true;
+    this.noSpeechRetries = 0;
     this.clearRestartTimer();
     this.startRecognition();
   }
@@ -125,13 +129,17 @@ export class WebSpeechProvider implements SttProvider {
     this.clearRestartTimer();
     const recognition = this.recognition;
     this.recognition = null;
-    if (!recognition) return;
+    if (!recognition) {
+      this.options.onEnd?.();
+      return;
+    }
     recognition.onend = null;
     try {
       recognition.stop();
     } catch {
       recognition.abort();
     }
+    this.options.onEnd?.();
   }
 
   private startRecognition(): void {
@@ -147,6 +155,7 @@ export class WebSpeechProvider implements SttProvider {
     recognition.onresult = (event) => {
       for (let index = event.resultIndex; index < event.results.length; index += 1) {
         const result = event.results[index];
+        this.noSpeechRetries = 0;
         this.options.onResult?.({
           transcript: result[0]?.transcript || "",
           isFinal: result.isFinal,
@@ -155,17 +164,29 @@ export class WebSpeechProvider implements SttProvider {
     };
     recognition.onerror = (event) => {
       const error = normalizeError(event.error);
+      if (error.code === "no-speech") {
+        this.noSpeechRetries += 1;
+        if (this.noSpeechRetries > WebSpeechProvider.MAX_NO_SPEECH_RETRIES) {
+          this.shouldRestart = false;
+          this.options.onError?.({ ...error, fatal: true });
+        }
+        return;
+      }
       this.options.onError?.(error);
       if (error.fatal) this.shouldRestart = false;
     };
     recognition.onend = () => {
       if (this.recognition === recognition) this.recognition = null;
-      this.options.onEnd?.();
       if (this.shouldRestart) {
+        const delay = this.noSpeechRetries > 0
+          ? Math.min(250 * 2 ** (this.noSpeechRetries - 1), WebSpeechProvider.MAX_RESTART_DELAY_MS)
+          : 250;
         this.restartTimer = window.setTimeout(() => {
           this.restartTimer = null;
           this.startRecognition();
-        }, 250);
+        }, delay);
+      } else {
+        this.options.onEnd?.();
       }
     };
 

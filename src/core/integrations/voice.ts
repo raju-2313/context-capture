@@ -15,6 +15,11 @@ export class VoiceNoteIntegration {
   private onUpdate: ((state: VoiceRecordingState) => void) | null = null;
   private onComplete: ((finalTranscript: string) => void) | null = null;
   private manuallyStopped = false;
+  private terminalError: string | null = null;
+
+  constructor(provider: SttProvider = createSttProvider()) {
+    this.provider = provider;
+  }
 
   isSupported(): boolean {
     return this.provider.isSupported();
@@ -27,6 +32,7 @@ export class VoiceNoteIntegration {
     this.onUpdate = onUpdate;
     this.onComplete = onComplete;
     this.manuallyStopped = false;
+    this.terminalError = null;
     this.activeTranscript = "";
     this.interimTranscript = "";
 
@@ -55,7 +61,7 @@ export class VoiceNoteIntegration {
         },
         onError: (error) => this.handleError(error),
         onEnd: () => {
-          if (!this.manuallyStopped) return;
+          if (!this.manuallyStopped || this.terminalError) return;
           const final = this.activeTranscript.trim();
           onUpdate({
             isRecording: false,
@@ -94,6 +100,7 @@ export class VoiceNoteIntegration {
   private handleError(error: SttError): void {
     if (error.code === "no-speech") return;
     this.manuallyStopped = true;
+    this.terminalError = error.message;
     this.onUpdate?.({
       isRecording: false,
       transcript: this.activeTranscript,
