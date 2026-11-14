@@ -129,6 +129,11 @@ describe("speech-to-text provider", () => {
 
   it("reports missing managed gateway configuration", async () => {
     await chrome.storage.local.clear();
+    await chrome.storage.local.set({
+      transcription_gateway_url: "",
+      supabase_url: "",
+      supabase_anon_key: "",
+    });
     await expect(transcribeThroughGateway(new Blob(["audio"]))).rejects.toThrow("Managed transcription is not configured");
   });
 

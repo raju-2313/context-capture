@@ -1,7 +1,7 @@
 create table if not exists public.plans (
   id text primary key,
   daily_limit integer not null check (daily_limit > 0),
-  stripe_price_id text unique,
+  razorpay_plan_id text unique,
   created_at timestamptz not null default now()
 );
 
@@ -12,7 +12,7 @@ on conflict (id) do update set daily_limit = excluded.daily_limit;
 create table if not exists public.profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
   plan_id text not null references public.plans(id) default 'free',
-  stripe_customer_id text unique,
+  razorpay_customer_id text unique,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -34,8 +34,9 @@ create index if not exists transcription_usage_daily_idx
 
 create table if not exists public.subscriptions (
   user_id uuid primary key references auth.users(id) on delete cascade,
-  stripe_subscription_id text unique not null,
-  status text not null,
+  razorpay_subscription_id text unique not null,
+  razorpay_customer_id text,
+  status text not null check (status in ('created', 'authenticated', 'active', 'past_due', 'paused', 'cancelled', 'completed', 'expired', 'inactive')),
   current_period_end timestamptz,
   updated_at timestamptz not null default now()
 );

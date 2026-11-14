@@ -6,6 +6,7 @@ import { CaptureCard } from "../../components/CaptureCard";
 import { voiceNoteIntegration, VoiceRecordingState } from "../../../core/integrations/voice";
 import { insertTranscriptAtCursor } from "../composer";
 import { getActiveTab } from "../activeTab";
+import { createRazorpaySubscription } from "../../../core/billing/razorpay";
 import {
   ScreenshotIcon,
   BookmarkIcon,
@@ -51,6 +52,8 @@ export default function ThisTab({ onViewDetail, onNavigateToLibrary }: ThisTabPr
   const composerValueRef = useRef("");
   const [voicePermissionPending, setVoicePermissionPending] = useState(false);
   const [voicePermissionGranted, setVoicePermissionGranted] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
 
   useEffect(() => {
     load();
@@ -241,6 +244,21 @@ export default function ThisTab({ onViewDetail, onNavigateToLibrary }: ThisTabPr
     await load();
   }
 
+  async function startUpgrade() {
+    if (checkoutLoading) return;
+    setCheckoutLoading(true);
+    setCheckoutError("");
+    try {
+      const checkout = await createRazorpaySubscription();
+      if (!checkout.checkoutUrl) throw new Error("Razorpay did not return a hosted checkout link.");
+      await chrome.tabs.create({ url: checkout.checkoutUrl });
+    } catch (error) {
+      setCheckoutError(error instanceof Error ? error.message : "Could not start checkout.");
+    } finally {
+      setCheckoutLoading(false);
+    }
+  }
+
   function getDomain(url: string) {
     try { return new URL(url).hostname.replace("www.", ""); }
     catch { return ""; }
@@ -392,9 +410,12 @@ export default function ThisTab({ onViewDetail, onNavigateToLibrary }: ThisTabPr
           {voiceState.quota && (
             <div class="tt-voice-quota">
               {voiceState.quota.remaining} of {voiceState.quota.dailyLimit} {voiceState.quota.plan} transcriptions remaining today.
-              {voiceState.upgradeUrl && (
-                <a href={voiceState.upgradeUrl} target="_blank" rel="noreferrer">Upgrade plan</a>
+              {voiceState.quota.remaining === 0 && (
+                <button type="button" onClick={startUpgrade} disabled={checkoutLoading}>
+                  {checkoutLoading ? "Opening checkout..." : "Upgrade with Razorpay"}
+                </button>
               )}
+              {checkoutError && <span>{checkoutError}</span>}
             </div>
           )}
           {voiceState.error && (
