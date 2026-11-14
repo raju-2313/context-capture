@@ -15,7 +15,10 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
   purge_days: "30",
   storage_warning_percent: "80",
   stt_provider: "auto",
-  groq_api_key: "",
+  transcription_gateway_url: "",
+  supabase_url: "",
+  supabase_anon_key: "",
+  transcription_upgrade_url: "",
 };
 
 export const RESTRICTED_URL_PATTERNS = [

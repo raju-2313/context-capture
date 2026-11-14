@@ -1,4 +1,5 @@
 import { settingsStore } from "../../data/settings";
+import { transcribeThroughGateway } from "./managedGateway";
 
 export type SttProviderKind = "web-speech" | "whisper-local" | "whisper-cloud" | "groq-cloud" | "configured";
 
@@ -12,12 +13,23 @@ export type SttErrorCode =
   | "unsupported"
   | "configuration"
   | "api"
+  | "quota-exceeded"
+  | "unauthorized"
   | "unknown";
 
 export interface SttError {
   code: SttErrorCode;
   message: string;
   fatal: boolean;
+  quota?: {
+    plan: string;
+    usedToday: number;
+    dailyLimit: number;
+    remaining: number;
+    resetAt?: string;
+    upgradeUrl?: string;
+  };
+  upgradeUrl?: string;
 }
 
 export interface SttResult {
@@ -85,8 +97,10 @@ const ERROR_MESSAGES: Record<SttErrorCode, string> = {
   "no-speech": "No speech detected.",
   aborted: "Speech recognition was stopped.",
   unsupported: "Voice input is not supported in this browser. Try Chrome or another Chromium browser with Web Speech enabled.",
-  configuration: "Add a Groq API key in Settings before using cloud transcription.",
-  api: "Groq could not transcribe this recording. Check your API key and account limits.",
+  configuration: "Managed transcription is not configured. Add the gateway settings in Settings.",
+  api: "The managed transcription service could not transcribe this recording.",
+  "quota-exceeded": "Your daily transcription limit is exhausted. Upgrade to continue.",
+  unauthorized: "Managed transcription authentication expired. Try again.",
   unknown: "Speech recognition failed.",
 };
 
@@ -94,7 +108,7 @@ function normalizeError(error: string | undefined): SttError {
   const code: SttErrorCode =
     error === "not-allowed" || error === "service-not-allowed" || error === "audio-capture" ||
     error === "network" || error === "no-speech" || error === "aborted" ||
-    error === "configuration" || error === "api"
+    error === "configuration" || error === "api" || error === "quota-exceeded" || error === "unauthorized"
       ? error
       : "unknown";
   return {
@@ -237,8 +251,6 @@ export class GroqCloudProvider implements SttProvider {
   private options: SttProviderOptions = {};
   private stopping = false;
 
-  constructor(private readonly apiKey?: string) {}
-
   isSupported(): boolean {
     return typeof navigator !== "undefined" &&
       Boolean(navigator.mediaDevices?.getUserMedia) &&
@@ -251,10 +263,6 @@ export class GroqCloudProvider implements SttProvider {
     this.chunks = [];
     if (!this.isSupported()) {
       options.onError?.({ code: "unsupported", message: "Cloud voice input requires microphone access and MediaRecorder.", fatal: true });
-      return;
-    }
-    if (!this.apiKey) {
-      options.onError?.({ code: "configuration", message: ERROR_MESSAGES.configuration, fatal: true });
       return;
     }
     void this.beginRecording();
@@ -306,23 +314,20 @@ export class GroqCloudProvider implements SttProvider {
       return;
     }
     try {
-      const form = new FormData();
-      form.append("file", blob, "voice.webm");
-      form.append("model", "whisper-large-v3-turbo");
-      if (this.options.language) form.append("language", this.options.language);
-      const response = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${this.apiKey}` },
-        body: form,
-      });
-      if (!response.ok) throw new Error(`Groq API returned ${response.status}`);
-      const payload = await response.json() as { text?: string };
-      const transcript = payload.text?.trim() || "";
+      const result = await transcribeThroughGateway(blob, this.options.language);
+      const transcript = result.text;
       if (!transcript) this.options.onError?.({ code: "no-speech", message: ERROR_MESSAGES["no-speech"], fatal: false });
       else this.options.onResult?.({ transcript, isFinal: true });
     } catch (error) {
-      const network = error instanceof TypeError;
-      this.options.onError?.({ code: network ? "network" : "api", message: network ? "Could not reach Groq. Check your network connection." : ERROR_MESSAGES.api, fatal: true });
+      const typed = error as Error & { code?: SttErrorCode; quota?: SttError["quota"]; upgradeUrl?: string };
+      const code = typed.code || (error instanceof TypeError ? "network" : "api");
+      this.options.onError?.({
+        code,
+        message: typed.message || ERROR_MESSAGES[code],
+        fatal: true,
+        quota: typed.quota,
+        upgradeUrl: typed.upgradeUrl,
+      });
     } finally {
       this.options.onEnd?.();
     }
@@ -366,9 +371,9 @@ class ConfiguredSttProvider implements SttProvider {
   start(options: SttProviderOptions = {}): void {
     this.pendingStop = false;
     void settingsStore.get("stt_provider").then(async (provider) => {
-      const key = await settingsStore.get("groq_api_key");
-      this.active = provider === "groq" || (provider === "auto" && Boolean(key))
-        ? new GroqCloudProvider(key || undefined)
+      const gateway = await settingsStore.get("transcription_gateway_url");
+      this.active = provider === "groq" || (provider === "auto" && Boolean(gateway))
+        ? new GroqCloudProvider()
         : new WebSpeechProvider();
       this.active.start(options);
       if (this.pendingStop) this.active.stop();

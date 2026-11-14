@@ -325,24 +325,30 @@ export default function Settings() {
               <div class="settings-card-header">
                 <div class="settings-card-title-group">
                   <h3 class="settings-card-title">Voice transcription</h3>
-                  <span class="settings-card-subtitle">Choose browser speech or Groq cloud transcription for the Voice button.</span>
+                  <span class="settings-card-subtitle">Choose browser speech or managed cloud transcription for the Voice button.</span>
                 </div>
               </div>
               <div class="setting-row">
                 <div>
                   <div style={{ fontWeight: 550, color: "#ffffff" }}>Provider</div>
-                  <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>Cloud audio is sent to Groq and uses your account's limits.</div>
+                  <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>Audio is sent to the configured managed service; your provider key is never stored in this extension.</div>
                 </div>
                 <select class="filter-select" value={settings["stt_provider"] || "auto"} onChange={(e) => saveSetting("stt_provider", e.currentTarget.value)}>
-                  <option value="auto">Automatic (Groq when key is configured)</option>
+                  <option value="auto">Automatic (managed gateway when configured)</option>
                   <option value="browser">Browser speech</option>
                   <option value="groq">Groq cloud</option>
                 </select>
               </div>
               <div class="setting-row" style={{ alignItems: "flex-start", flexDirection: "column", gap: 8 }}>
-                <label htmlFor="groq-api-key" style={{ fontWeight: 550, color: "#ffffff" }}>Groq API key</label>
-                <input id="groq-api-key" type="password" class="filter-select" autocomplete="off" value={settings["groq_api_key"] || ""} onInput={(e) => saveSetting("groq_api_key", e.currentTarget.value)} placeholder="gsk_..." />
-                <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Stored only in chrome.storage.local. Get a key from console.groq.com. Audio is uploaded only when you press Stop.</div>
+                <label htmlFor="transcription-gateway-url" style={{ fontWeight: 550, color: "#ffffff" }}>Managed gateway URL</label>
+                <input id="transcription-gateway-url" type="url" class="filter-select" value={settings["transcription_gateway_url"] || ""} onInput={(e) => saveSetting("transcription_gateway_url", e.currentTarget.value)} placeholder="https://your-project.supabase.co/functions/v1" />
+                <label htmlFor="supabase-url" style={{ fontWeight: 550, color: "#ffffff" }}>Supabase project URL</label>
+                <input id="supabase-url" type="url" class="filter-select" value={settings["supabase_url"] || ""} onInput={(e) => saveSetting("supabase_url", e.currentTarget.value)} placeholder="https://your-project.supabase.co" />
+                <label htmlFor="supabase-anon-key" style={{ fontWeight: 550, color: "#ffffff" }}>Supabase anonymous key</label>
+                <input id="supabase-anon-key" type="password" class="filter-select" autocomplete="off" value={settings["supabase_anon_key"] || ""} onInput={(e) => saveSetting("supabase_anon_key", e.currentTarget.value)} placeholder="Public anon key" />
+                <label htmlFor="transcription-upgrade-url" style={{ fontWeight: 550, color: "#ffffff" }}>Upgrade URL</label>
+                <input id="transcription-upgrade-url" type="url" class="filter-select" value={settings["transcription_upgrade_url"] || ""} onInput={(e) => saveSetting("transcription_upgrade_url", e.currentTarget.value)} placeholder="https://your-app.example.com/upgrade" />
+                <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Privacy disclosure: when managed transcription is enabled, audio is uploaded only after you press Stop. The owner/provider key stays in Supabase Edge Function secrets; this extension never receives it. Paid plans may be required after the free daily allowance.</div>
               </div>
             </div>
             <div class="settings-card">

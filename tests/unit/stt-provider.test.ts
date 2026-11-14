@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createSttProvider, GroqCloudProvider, WebSpeechProvider } from "../../src/core/stt/provider";
 import { VoiceNoteIntegration } from "../../src/core/integrations/voice";
 import { insertTranscriptAtCursor } from "../../src/ui/sidepanel/composer";
+import { transcribeThroughGateway } from "../../src/core/stt/managedGateway";
 
 class FakeRecognition {
   static instances: FakeRecognition[] = [];
@@ -126,18 +127,12 @@ describe("speech-to-text provider", () => {
     expect(provider.kind).toBe("groq-cloud");
   });
 
-  it("reports a missing Groq key without starting capture", () => {
-    vi.stubGlobal("MediaRecorder", class {});
-    Object.defineProperty(navigator, "mediaDevices", {
-      configurable: true,
-      value: { getUserMedia: vi.fn() },
-    });
-    const onError = vi.fn();
-    new GroqCloudProvider().start({ onError });
-    expect(onError).toHaveBeenCalledWith(expect.objectContaining({ code: "configuration", fatal: true }));
+  it("reports missing managed gateway configuration", async () => {
+    await chrome.storage.local.clear();
+    await expect(transcribeThroughGateway(new Blob(["audio"]))).rejects.toThrow("Managed transcription is not configured");
   });
 
-  it("uploads a multipart recording with the Groq model and emits final text", async () => {
+  it("uploads a multipart recording through the managed gateway and emits final text", async () => {
     const stream = { getTracks: () => [{ stop: vi.fn() }] };
     Object.defineProperty(navigator, "mediaDevices", {
       configurable: true,
@@ -160,26 +155,66 @@ describe("speech-to-text provider", () => {
       });
     }
     vi.stubGlobal("MediaRecorder", FakeRecorder);
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ text: "hello cloud" }) });
+    await chrome.storage.local.set({
+      transcription_gateway_url: "https://gateway.test",
+      supabase_url: "https://supabase.test",
+      supabase_anon_key: "anon_test",
+    });
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ access_token: "jwt_test" }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ text: "hello cloud", quota: { plan: "free", remaining: 4, dailyLimit: 5, usedToday: 1 } }) });
     vi.stubGlobal("fetch", fetchMock);
     const onResult = vi.fn();
     const onEnd = vi.fn();
-    const provider = new GroqCloudProvider("gsk_test");
+    const provider = new GroqCloudProvider();
     provider.start({ onResult, onEnd });
     await Promise.resolve();
     provider.stop();
-    await Promise.resolve();
-    await Promise.resolve();
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.groq.com/openai/v1/audio/transcriptions",
-      expect.objectContaining({ method: "POST", headers: { Authorization: "Bearer gsk_test" }, body: expect.any(FormData) }),
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "https://gateway.test/transcribe",
+      expect.objectContaining({ method: "POST", headers: expect.objectContaining({ Authorization: "Bearer jwt_test", "X-Request-Id": expect.any(String) }), body: expect.any(FormData) }),
     );
-    const body = fetchMock.mock.calls[0][1].body as FormData;
-    expect(body.get("model")).toBe("whisper-large-v3-turbo");
+    const body = fetchMock.mock.calls[1][1].body as FormData;
     expect(body.get("file")).toBeInstanceOf(Blob);
     expect(onResult).toHaveBeenCalledWith({ transcript: "hello cloud", isFinal: true });
     expect(onEnd).toHaveBeenCalled();
+  });
+
+  it("surfaces quota exhaustion and upgrade metadata from the managed gateway", async () => {
+    await chrome.storage.local.set({
+      transcription_gateway_url: "https://gateway.test",
+      supabase_auth_session: JSON.stringify({ access_token: "jwt_test" }),
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: false,
+      status: 429,
+      json: async () => ({ error: "Daily transcription quota exceeded", quota: { plan: "free", remaining: 0, dailyLimit: 5, usedToday: 5, upgradeUrl: "https://upgrade.test" } }),
+    }));
+
+    await expect(transcribeThroughGateway(new Blob(["audio"]))).rejects.toMatchObject({
+      code: "quota-exceeded",
+      upgradeUrl: "https://upgrade.test",
+      quota: { remaining: 0 },
+    });
+  });
+
+  it("surfaces unauthorized gateway responses for retry/setup UI", async () => {
+    await chrome.storage.local.set({
+      transcription_gateway_url: "https://gateway.test",
+      supabase_auth_session: JSON.stringify({ access_token: "expired" }),
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: async () => ({ error: "Authentication required" }),
+    }));
+
+    await expect(transcribeThroughGateway(new Blob(["audio"]))).rejects.toMatchObject({
+      code: "unauthorized",
+    });
   });
 
   it("explains when Web Speech is unsupported instead of blaming connectivity", () => {
@@ -219,6 +254,33 @@ describe("speech-to-text provider", () => {
       provider.start.mock.calls[0][0]?.onEnd?.();
       expect(onComplete).toHaveBeenCalledWith("hello");
       expect(updates.at(-1)).toMatchObject({ isRecording: false, error: undefined });
+    });
+
+    it("exposes quota metadata so the voice UI can show an upgrade action", () => {
+      const provider = {
+        kind: "groq-cloud" as const,
+        isSupported: () => true,
+        start: vi.fn((options) => {
+          options?.onError?.({
+            code: "quota-exceeded",
+            message: "Daily transcription quota exceeded",
+            fatal: true,
+            quota: { plan: "free", remaining: 0, dailyLimit: 5, usedToday: 5 },
+            upgradeUrl: "https://upgrade.test",
+          });
+        }),
+        stop: vi.fn(),
+      };
+      const integration = new VoiceNoteIntegration(provider);
+      const updates: Array<{ error?: string; upgradeUrl?: string; quota?: { remaining: number } }> = [];
+      integration.startRecording((state) => updates.push(state), vi.fn());
+
+      expect(updates.some((state) => state.error === "Daily transcription quota exceeded")).toBe(true);
+      expect(updates.find((state) => state.error === "Daily transcription quota exceeded")).toMatchObject({
+        error: "Daily transcription quota exceeded",
+        upgradeUrl: "https://upgrade.test",
+        quota: { remaining: 0 },
+      });
     });
   });
 });

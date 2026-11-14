@@ -6,6 +6,13 @@ export interface VoiceRecordingState {
   interimTranscript: string;
   error?: string;
   status?: "idle" | "listening" | "transcribing" | "error" | "unsupported";
+  quota?: {
+    remaining: number;
+    dailyLimit: number;
+    plan: string;
+    upgradeUrl?: string;
+  };
+  upgradeUrl?: string;
 }
 
 export class VoiceNoteIntegration {
@@ -113,6 +120,8 @@ export class VoiceNoteIntegration {
       interimTranscript: "",
       error: error.message,
       status: error.code === "unsupported" ? "unsupported" : "error",
+      quota: error.quota,
+      upgradeUrl: error.upgradeUrl,
     });
   }
 }

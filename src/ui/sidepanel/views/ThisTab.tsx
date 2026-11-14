@@ -389,6 +389,14 @@ export default function ThisTab({ onViewDetail, onNavigateToLibrary }: ThisTabPr
               <span style={{ opacity: 0.6 }}>{voiceState.interimTranscript}</span>
             </div>
           )}
+          {voiceState.quota && (
+            <div class="tt-voice-quota">
+              {voiceState.quota.remaining} of {voiceState.quota.dailyLimit} {voiceState.quota.plan} transcriptions remaining today.
+              {voiceState.upgradeUrl && (
+                <a href={voiceState.upgradeUrl} target="_blank" rel="noreferrer">Upgrade plan</a>
+              )}
+            </div>
+          )}
           {voiceState.error && (
             <button class="tt-voice-dismiss" onClick={() => setVoiceState({ isRecording: false, transcript: "", interimTranscript: "", status: "idle" })}>
               Dismiss
