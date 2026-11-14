@@ -1,6 +1,6 @@
 /**
  * ContextCapture - In-Page Floating Selection Tooltip & Action Menu
- * Modern Dark Craft Aesthetic (inspired by puvio.app)
+ * Restrained in-page selection actions.
  * Isolated inside an attached Shadow DOM so host styles cannot interfere.
  */
 
@@ -50,7 +50,7 @@
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "Helvetica Neue", sans-serif;
           font-size: 13px;
           line-height: 1.4;
-          color: #ffffff;
+          color: #f4f4f5;
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
         }
@@ -68,55 +68,49 @@
           -webkit-user-select: none;
           z-index: 2147483647;
           display: none;
-          animation: ccPopIn 0.16s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          animation: ccPopIn 0.14s ease-out forwards;
         }
 
         @keyframes ccPopIn {
           0% {
             opacity: 0;
-            transform: translateY(6px) scale(0.95);
+            transform: translateY(4px);
           }
           100% {
             opacity: 1;
-            transform: translateY(0) scale(1);
+            transform: translateY(0);
           }
         }
 
         @keyframes ccFadeOut {
           0% {
             opacity: 1;
-            transform: scale(1);
+            transform: none;
           }
           100% {
             opacity: 0;
-            transform: scale(0.92);
+            transform: translateY(2px);
           }
         }
 
-        /* --- Floating Action Pill (Matches user screenshot) --- */
         .cc-pill {
           display: inline-flex;
           align-items: center;
           gap: 6px;
           height: 32px;
           padding: 0 10px 0 8px;
-          background: rgba(9, 9, 11, 0.96);
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          border-radius: 9999px;
-          box-shadow: 0 8px 24px -2px rgba(0, 0, 0, 0.75),
-                      0 0 0 1px rgba(255, 255, 255, 0.05),
-                      0 2px 6px rgba(0, 0, 0, 0.5);
+          background: #111113;
+          border: 1px solid #3f3f46;
+          border-radius: 7px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
           cursor: pointer;
-          transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+          transition: background 0.15s ease, border-color 0.15s ease;
           color: #ffffff;
         }
 
         .cc-pill:hover {
-          background: #121215;
-          border-color: rgba(223, 255, 0, 0.6);
-          transform: translateY(-1px);
-          box-shadow: 0 12px 28px -2px rgba(0, 0, 0, 0.85),
-                      0 0 0 1px rgba(223, 255, 0, 0.18);
+          background: #18181b;
+          border-color: #a3b85a;
         }
 
         .cc-pill-icon {
@@ -145,14 +139,12 @@
           transform: translateY(1px);
         }
 
-        /* --- Expanded Menu Card (Clean Craft Floating Menu) --- */
         .cc-menu {
           width: 282px;
-          background: #09090b;
-          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: #111113;
+          border: 1px solid #3f3f46;
           border-radius: 10px;
-          box-shadow: 0 18px 40px -10px rgba(0, 0, 0, 0.9),
-                      0 0 0 1px rgba(255, 255, 255, 0.04);
+          box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
           overflow: hidden;
           display: flex;
           flex-direction: column;
@@ -163,7 +155,7 @@
           align-items: center;
           justify-content: space-between;
           padding: 10px 14px 8px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          border-bottom: 1px solid #27272a;
         }
 
         .cc-menu-title {
@@ -191,7 +183,7 @@
 
         .cc-close-btn {
           background: transparent;
-          border: none;
+          border: 1px solid transparent;
           color: #94a3b8;
           cursor: pointer;
           padding: 2px 4px;
@@ -199,18 +191,19 @@
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: color 0.1s ease, background 0.1s ease;
+          transition: color 0.1s ease, background 0.1s ease, border-color 0.1s ease;
         }
 
         .cc-close-btn:hover {
           color: #ff4d4f;
-          background: rgba(255, 77, 79, 0.12);
+          background: #261719;
+          border-color: #7f1d1d;
         }
 
         .cc-preview-box {
           padding: 8px 14px;
-          background: rgba(0, 0, 0, 0.5);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          background: #0c0c0e;
+          border-bottom: 1px solid #27272a;
           font-size: 11.5px;
           color: #a1a1aa;
           font-style: italic;
@@ -242,18 +235,18 @@
         }
 
         .cc-action-item:hover {
-          background: rgba(255, 255, 255, 0.06);
-          border-color: rgba(255, 255, 255, 0.1);
+          background: #1c1c20;
+          border-color: #3f3f46;
         }
 
         .cc-action-item.cc-item-ai {
-          background: #111114;
-          border: 1px solid rgba(223, 255, 0, 0.38);
+          background: #191d0f;
+          border: 1px solid #65752a;
         }
 
         .cc-action-item.cc-item-ai:hover {
-          background: #151518;
-          border-color: rgba(223, 255, 0, 0.65);
+          background: #202516;
+          border-color: #a3b85a;
         }
 
         .cc-item-icon {
@@ -263,19 +256,19 @@
           width: 26px;
           height: 26px;
           border-radius: 6px;
-          background: rgba(255, 255, 255, 0.06);
+          background: #1f1f23;
           color: #a1a1aa;
           flex-shrink: 0;
-          transition: all 0.12s ease;
+          transition: color 0.12s ease, background 0.12s ease;
         }
 
         .cc-action-item:hover .cc-item-icon {
           color: #DFFF00;
-          background: rgba(223, 255, 0, 0.12);
+          background: #2b3219;
         }
 
         .cc-action-item.cc-item-ai .cc-item-icon {
-          background: rgba(223, 255, 0, 0.1);
+          background: #2b3219;
           color: #DFFF00;
         }
 
@@ -302,7 +295,8 @@
           font-weight: 700;
           padding: 2px 6px;
           border-radius: 4px;
-          background: rgba(223, 255, 0, 0.1);
+          background: #2b3219;
+          border: 1px solid #65752a;
           color: #DFFF00;
           letter-spacing: 0.02em;
           text-transform: uppercase;
@@ -313,8 +307,8 @@
           align-items: center;
           justify-content: space-between;
           padding: 7px 14px 9px;
-          border-top: 1px solid rgba(255, 255, 255, 0.06);
-          background: #070709;
+          border-top: 1px solid #27272a;
+          background: #0c0c0e;
           font-size: 10px;
           color: #71717a;
         }
@@ -333,9 +327,9 @@
           display: flex;
           align-items: center;
           gap: 8px;
-          background: rgba(223, 255, 0, 0.14);
-          border: 1px solid rgba(223, 255, 0, 0.4);
-          border-radius: 12px;
+          background: #191d0f;
+          border: 1px solid #65752a;
+          border-radius: 8px;
           color: #DFFF00;
           font-size: 12px;
           font-weight: 650;
@@ -550,7 +544,7 @@
 
     switch (action) {
       case "highlight": {
-        showToast(container, "✓ Saved to Tab Context");
+        showToast(container, "Saved to Tab Context");
         try {
           chrome.runtime.sendMessage({
             id: crypto.randomUUID(),
@@ -571,7 +565,7 @@
         break;
       }
       case "note": {
-        showToast(container, "✓ Saved to Notes");
+        showToast(container, "Saved to Notes");
         try {
           chrome.runtime.sendMessage({
             id: crypto.randomUUID(),
@@ -592,7 +586,7 @@
         break;
       }
       case "question": {
-        showToast(container, "✓ Saved Question");
+        showToast(container, "Saved Question");
         try {
           chrome.runtime.sendMessage({
             id: crypto.randomUUID(),
@@ -613,7 +607,7 @@
         break;
       }
       case "ask-ai": {
-        showToast(container, "✓ Opening AI Assistant...");
+        showToast(container, "Opening AI Assistant...");
         try {
           const prefill = textToCapture.length > 250
             ? `Explain this: "${textToCapture.slice(0, 250)}..."`
@@ -635,7 +629,7 @@
       }
       case "copy": {
         navigator.clipboard.writeText(textToCapture).then(() => {
-          showToast(container, "✓ Copied Clean Text!");
+          showToast(container, "Copied Clean Text");
           setTimeout(hideTooltip, 600);
         }).catch(() => {
           showToast(container, "Failed to copy");
