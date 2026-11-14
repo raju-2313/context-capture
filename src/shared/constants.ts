@@ -15,9 +15,9 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
   purge_days: "30",
   storage_warning_percent: "80",
   stt_provider: "auto",
-  transcription_gateway_url: "",
-  supabase_url: "",
-  supabase_anon_key: "",
+  transcription_gateway_url: "https://xwrxyciwteauzfijhogs.supabase.co/functions/v1",
+  supabase_url: "https://xwrxyciwteauzfijhogs.supabase.co",
+  supabase_anon_key: "sb_publishable_NUXcl5v2MqwLN1rixrTuXw_i3x0dp4U",
   transcription_upgrade_url: "",
 };
 
