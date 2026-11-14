@@ -24,7 +24,12 @@ const RefreshIcon = ({ spinning }: { spinning: boolean }) => (
   </svg>
 );
 
-export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) => void } = {}) {
+interface ThisTabProps {
+  onViewDetail?: (id: string) => void;
+  onNavigateToLibrary?: () => void;
+}
+
+export default function ThisTab({ onViewDetail, onNavigateToLibrary }: ThisTabProps = {}) {
   const [contextId, setContextId] = useState<string | null>(null);
   const [contextTitle, setContextTitle] = useState("New Context");
   const [captures, setCaptures] = useState<any[]>([]);
@@ -360,7 +365,7 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
                 <span class="tt-snippet-label">Active Context Snippet</span>
                 <button
                   class="tt-snippet-link"
-                  onClick={() => chrome.runtime.sendMessage({ type: "NAVIGATE_PANEL", targetTab: "all" })}
+                  onClick={() => onNavigateToLibrary?.()}
                 >
                   Explore Library ↗
                 </button>
@@ -391,7 +396,7 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
             </span>
             <button
               class="tt-snippet-link"
-              onClick={() => chrome.runtime.sendMessage({ type: "NAVIGATE_PANEL", targetTab: "all" })}
+              onClick={() => onNavigateToLibrary?.()}
             >
               Explore Library ↗
             </button>

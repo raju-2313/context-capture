@@ -8,14 +8,14 @@ import ProjectsView from "./views/Projects";
 import CaptureDetail from "./views/Detail";
 import AssistantView from "./views/Assistant";
 import { SettingsIcon, SparklesIcon } from "../components/Icons";
-
-type Tab = "thistab" | "all" | "contexts" | "projects" | "assistant";
+import { navigateToTab, SidePanelTab } from "./navigation";
 
 export default function SidePanelApp() {
-  const [activeTab, setActiveTab] = useState<Tab>("thistab");
+  const [activeTab, setActiveTab] = useState<SidePanelTab>("thistab");
   const [captureCount, setCaptureCount] = useState<number>(0);
   const [detailCaptureId, setDetailCaptureId] = useState<string | null>(null);
   const [assistantInitialQuery, setAssistantInitialQuery] = useState<string | null>(null);
+  const goToTab = (tab: SidePanelTab) => navigateToTab(tab, setActiveTab, () => setDetailCaptureId(null));
 
   useEffect(() => {
     // Load capture count badge
@@ -59,9 +59,8 @@ export default function SidePanelApp() {
       if (msg?.type === "CAPTURE_SAVED" || msg?.type === "CAPTURE_DELETED" || msg?.type === "CAPTURES_CHANGED") {
         capRepo.count().then(setCaptureCount).catch(() => {});
       } else if (msg?.type === "NAVIGATE_PANEL") {
-        if (msg.targetTab) {
-          setActiveTab(msg.targetTab);
-          setDetailCaptureId(null);
+        if (msg.targetTab && ["thistab", "all", "contexts", "projects", "assistant"].includes(msg.targetTab)) {
+          goToTab(msg.targetTab as SidePanelTab);
         }
         if (msg.prefillQuery) {
           setAssistantInitialQuery(msg.prefillQuery);
@@ -107,7 +106,7 @@ export default function SidePanelApp() {
         <button
           class={`sp-tab ${activeTab === "thistab" && !detailCaptureId ? "active" : ""}`}
           role="tab"
-          onClick={() => { setActiveTab("thistab"); setDetailCaptureId(null); }}
+          onClick={() => goToTab("thistab")}
           title="Ctrl+1"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -118,7 +117,7 @@ export default function SidePanelApp() {
         <button
           class={`sp-tab ${activeTab === "all" && !detailCaptureId ? "active" : ""}`}
           role="tab"
-          onClick={() => { setActiveTab("all"); setDetailCaptureId(null); }}
+          onClick={() => goToTab("all")}
           title="Ctrl+2"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -130,7 +129,7 @@ export default function SidePanelApp() {
         <button
           class={`sp-tab ${activeTab === "contexts" && !detailCaptureId ? "active" : ""}`}
           role="tab"
-          onClick={() => { setActiveTab("contexts"); setDetailCaptureId(null); }}
+          onClick={() => goToTab("contexts")}
           title="Ctrl+3"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -141,7 +140,7 @@ export default function SidePanelApp() {
         <button
           class={`sp-tab ${activeTab === "projects" && !detailCaptureId ? "active" : ""}`}
           role="tab"
-          onClick={() => { setActiveTab("projects"); setDetailCaptureId(null); }}
+          onClick={() => goToTab("projects")}
           title="Ctrl+4"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -152,7 +151,7 @@ export default function SidePanelApp() {
         <button
           class={`sp-tab ${activeTab === "assistant" && !detailCaptureId ? "active" : ""}`}
           role="tab"
-          onClick={() => { setActiveTab("assistant"); setDetailCaptureId(null); }}
+          onClick={() => goToTab("assistant")}
           title="Ctrl+5"
         >
           <SparklesIcon size={12} color="currentColor" />
@@ -162,14 +161,21 @@ export default function SidePanelApp() {
 
       <div class="content">
         {detailCaptureId ? (
-          <CaptureDetail
-            captureId={detailCaptureId}
-            onBack={() => setDetailCaptureId(null)}
-            onSelectCapture={(id) => setDetailCaptureId(id)}
-          />
+          <div class="sp-view-transition" key={`detail-${detailCaptureId}`}>
+            <CaptureDetail
+              captureId={detailCaptureId}
+              onBack={() => setDetailCaptureId(null)}
+              onSelectCapture={(id) => setDetailCaptureId(id)}
+            />
+          </div>
         ) : (
-          <>
-            {activeTab === "thistab" && <ThisTab onViewDetail={(id) => setDetailCaptureId(id)} />}
+          <div class="sp-view-transition" key={activeTab}>
+            {activeTab === "thistab" && (
+              <ThisTab
+                onViewDetail={(id) => setDetailCaptureId(id)}
+                onNavigateToLibrary={() => goToTab("all")}
+              />
+            )}
             {activeTab === "all" && <All onViewDetail={(id) => setDetailCaptureId(id)} />}
             {activeTab === "contexts" && <Contexts />}
             {activeTab === "projects" && <ProjectsView onViewDetail={(id) => setDetailCaptureId(id)} />}
@@ -179,7 +185,7 @@ export default function SidePanelApp() {
                 initialQuery={assistantInitialQuery ?? undefined}
               />
             )}
-          </>
+          </div>
         )}
       </div>
     </div>
