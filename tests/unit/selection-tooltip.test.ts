@@ -81,4 +81,44 @@ describe("Selection tooltip & in-page popup routing", () => {
     expect((globalThis as any).chrome.sidePanel.open).toHaveBeenCalledWith({ windowId: 99 });
     expect(response?.success).toBe(true);
   });
+
+  it("opens the dedicated side panel from the selection tooltip footer", async () => {
+    const sendMessage = vi.fn().mockResolvedValue(undefined);
+    (globalThis as any).chrome.runtime = {
+      sendMessage,
+      onMessage: {
+        addListener: vi.fn(),
+      },
+    };
+    delete (window as any).__CC_SELECTION_TOOLTIP_LOADED__;
+
+    const range = {
+      getBoundingClientRect: () => ({ left: 100, top: 100, width: 40, height: 20, bottom: 120 }),
+      getClientRects: () => [],
+    };
+    const selection = {
+      isCollapsed: false,
+      rangeCount: 1,
+      toString: () => "selected text",
+      getRangeAt: () => range,
+    };
+    vi.spyOn(window, "getSelection").mockReturnValue(selection as any);
+
+    await import("../../src/content/selectionTooltip");
+    document.dispatchEvent(new MouseEvent("mouseup"));
+    await new Promise((resolve) => setTimeout(resolve, 140));
+
+    const host = document.querySelector("#cc-selection-tooltip-host") as HTMLElement;
+    const shadow = host.shadowRoot as ShadowRoot;
+    (shadow.querySelector("#cc-pill-btn") as HTMLElement).click();
+
+    const sidePanelButton = shadow.querySelector(".cc-sidepanel-button") as HTMLButtonElement;
+    expect(sidePanelButton).not.toBeNull();
+    sidePanelButton.click();
+
+    expect(sendMessage).toHaveBeenCalledWith(expect.objectContaining({
+      type: "OPEN_PANEL",
+      payload: { targetTab: "thistab" },
+    }));
+  });
 });

@@ -313,12 +313,30 @@
           color: #71717a;
         }
 
-        .cc-sidepanel-hint {
+        .cc-sidepanel-button {
+          appearance: none;
+          border: 0;
+          padding: 0;
+          background: transparent;
           color: #DFFF00;
           font-weight: 600;
+          font: inherit;
+          font-size: 10px;
+          cursor: pointer;
+          text-align: right;
           display: flex;
           align-items: center;
           gap: 2px;
+        }
+
+        .cc-sidepanel-button:hover {
+          color: #ffffff;
+        }
+
+        .cc-sidepanel-button:focus-visible {
+          outline: 1px solid #DFFF00;
+          outline-offset: 2px;
+          border-radius: 2px;
         }
 
         /* --- Status Toast Banner inside Tooltip --- */
@@ -517,7 +535,9 @@
             </svg>
             Local-first
           </span>
-          <span class="cc-sidepanel-hint">Dedicated Side Panel</span>
+          <button class="cc-sidepanel-button" type="button" title="Open dedicated side panel">
+            Dedicated Side Panel
+          </button>
         </div>
       </div>
     `;
@@ -526,6 +546,20 @@
     container.querySelector("#cc-close")?.addEventListener("click", (e) => {
       e.stopPropagation();
       hideTooltip();
+    });
+
+    container.querySelector(".cc-sidepanel-button")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      try {
+        chrome.runtime.sendMessage({
+          id: crypto.randomUUID(),
+          type: "OPEN_PANEL",
+          timestamp: Date.now(),
+          payload: { targetTab: "thistab" },
+        });
+      } catch (error) {
+        console.warn("[ContextCapture] Error opening side panel", error);
+      }
     });
 
     const items = container.querySelectorAll(".cc-action-item");
