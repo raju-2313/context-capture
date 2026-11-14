@@ -1728,6 +1728,11 @@ input:focus, select:focus, textarea:focus {
   border-color: rgba(255, 77, 79, 0.4);
   background: rgba(255, 77, 79, 0.08);
 }
+.tt-media-btn.error {
+  color: #ff8a8a;
+  border-color: rgba(255, 77, 79, 0.4);
+}
+.tt-media-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
 .tt-textarea {
   width: 100%;
@@ -1826,6 +1831,21 @@ input:focus, select:focus, textarea:focus {
   color: #a1a1aa;
   line-height: 1.5;
   font-style: italic;
+}
+.tt-voice-banner.error {
+  background: rgba(255, 77, 79, 0.07);
+  border-color: rgba(255, 77, 79, 0.35);
+}
+.tt-voice-banner.error .tt-voice-top { color: #ff8a8a; }
+.tt-voice-dismiss {
+  margin-top: 6px;
+  padding: 2px 7px;
+  color: #a1a1aa;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 10px;
 }
 
 /* ═══ Empty / Ready State ═══ */

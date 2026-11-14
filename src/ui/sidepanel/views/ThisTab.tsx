@@ -4,6 +4,7 @@ import { contextLifecycle } from "../../../core/context/lifecycle";
 import { captures as capRepo, contexts as ctxRepo } from "../../../data/repositories";
 import { CaptureCard } from "../../components/CaptureCard";
 import { voiceNoteIntegration, VoiceRecordingState } from "../../../core/integrations/voice";
+import { insertTranscriptAtCursor } from "../composer";
 import { getActiveTab } from "../activeTab";
 import {
   ScreenshotIcon,
@@ -46,13 +47,24 @@ export default function ThisTab({ onViewDetail, onNavigateToLibrary }: ThisTabPr
   const [currentTabTitle, setCurrentTabTitle] = useState("");
   const [currentTabUrl, setCurrentTabUrl] = useState("");
   const titleRef = useRef<HTMLElement>(null);
+  const composerRef = useRef<HTMLTextAreaElement>(null);
+  const composerValueRef = useRef("");
+  const [voicePermissionPending, setVoicePermissionPending] = useState(false);
+  const [voicePermissionGranted, setVoicePermissionGranted] = useState(false);
 
   useEffect(() => {
     load();
 
-    const handleActivated = () => load();
+    const handleActivated = () => {
+      voiceNoteIntegration.stopRecording();
+      setVoicePermissionPending(false);
+      load();
+    };
     const handleUpdated = (_tabId: number, changeInfo: chrome.tabs.TabChangeInfo) => {
-      if (changeInfo.status === "complete") load();
+      if (changeInfo.status === "complete") {
+        voiceNoteIntegration.stopRecording();
+        load();
+      }
     };
     const handleMessage = (msg: any) => {
       if (
@@ -71,11 +83,26 @@ export default function ThisTab({ onViewDetail, onNavigateToLibrary }: ThisTabPr
     const intervalId = setInterval(() => load(), 30000);
 
     return () => {
+      voiceNoteIntegration.stopRecording();
       chrome.tabs.onActivated.removeListener(handleActivated);
       chrome.tabs.onUpdated.removeListener(handleUpdated);
       chrome.runtime.onMessage.removeListener(handleMessage);
       clearInterval(intervalId);
     };
+  }, []);
+
+  useEffect(() => {
+    const handlePermissionResult = (message: { type?: string; granted?: boolean }) => {
+      if (message?.type !== "MIC_PERMISSION_RESULT") return;
+      setVoicePermissionPending(false);
+      if (message.granted) {
+        setVoicePermissionGranted(true);
+        startVoiceRecording();
+      }
+      else setVoiceState((state) => ({ ...state, isRecording: false, status: "error", error: "Microphone permission was denied." }));
+    };
+    chrome.runtime.onMessage.addListener(handlePermissionResult);
+    return () => chrome.runtime.onMessage.removeListener(handlePermissionResult);
   }, []);
 
   async function handleRefresh() {
@@ -159,6 +186,52 @@ export default function ThisTab({ onViewDetail, onNavigateToLibrary }: ThisTabPr
         windowId: tab.windowId,
       });
       await load();
+    }
+  }
+
+  function insertVoiceText(text: string) {
+    const textarea = composerRef.current;
+    const currentValue = composerValueRef.current;
+    const insertion = insertTranscriptAtCursor(
+      currentValue,
+      text,
+      textarea?.selectionStart ?? currentValue.length,
+      textarea?.selectionEnd ?? currentValue.length,
+    );
+    composerValueRef.current = insertion.value;
+    setComposerText(insertion.value);
+    requestAnimationFrame(() => {
+      if (!composerRef.current) return;
+      composerRef.current.focus();
+      composerRef.current.setSelectionRange(insertion.cursor, insertion.cursor);
+    });
+  }
+
+  function startVoiceRecording() {
+    voiceNoteIntegration.startRecording(
+      (state) => setVoiceState(state),
+      (finalText) => insertVoiceText(finalText),
+    );
+  }
+
+  async function handleVoiceClick() {
+    if (voiceState.isRecording) {
+      voiceNoteIntegration.stopRecording();
+      return;
+    }
+    if (voiceState.status === "unsupported") return;
+    if (voicePermissionPending) return;
+    if (voicePermissionGranted) {
+      startVoiceRecording();
+      return;
+    }
+    setVoicePermissionPending(true);
+    const permissionUrl = chrome.runtime.getURL("permissions.html");
+    try {
+      await chrome.tabs.create({ url: permissionUrl });
+    } catch {
+      setVoicePermissionPending(false);
+      startVoiceRecording();
     }
   }
 
@@ -249,24 +322,12 @@ export default function ThisTab({ onViewDetail, onNavigateToLibrary }: ThisTabPr
               Link
             </button>
             <button
-              class={`tt-media-btn ${voiceState.isRecording ? "recording" : ""}`}
-              onClick={async () => {
-                if (voiceState.isRecording) {
-                  voiceNoteIntegration.stopRecording();
-                } else {
-                  const tab = await getActiveTab();
-                  voiceNoteIntegration.startRecording(
-                    (state) => setVoiceState(state),
-                    async (finalText) => {
-                      if (finalText) {
-                        await voiceNoteIntegration.saveVoiceCapture(finalText, tab?.id ?? null, tab?.windowId ?? null);
-                        await load();
-                      }
-                    }
-                  );
-                }
-              }}
-              title={voiceState.isRecording ? "Stop recording" : "Record voice note"}
+              class={`tt-media-btn ${voiceState.isRecording ? "recording" : ""} ${voiceState.status === "error" ? "error" : ""}`}
+              onClick={handleVoiceClick}
+              title={voiceState.isRecording ? "Stop voice input" : voiceState.status === "unsupported" ? "Voice input is unsupported" : "Start voice input"}
+              aria-label={voiceState.isRecording ? "Stop voice input" : "Start voice input"}
+              aria-pressed={voiceState.isRecording}
+              disabled={voicePermissionPending || voiceState.status === "unsupported"}
             >
               {voiceState.isRecording ? <><StopIcon size={11} /> Stop</> : <><MicIcon size={11} color="currentColor" /> Voice</>}
             </button>
@@ -275,15 +336,19 @@ export default function ThisTab({ onViewDetail, onNavigateToLibrary }: ThisTabPr
 
         {/* Textarea */}
         <textarea
+          ref={composerRef}
           class="tt-textarea"
           rows={2}
           value={composerText}
+          onInput={(e: any) => {
+            composerValueRef.current = e.currentTarget.value;
+            setComposerText(e.currentTarget.value);
+          }}
           placeholder={
             composerType === "note"
               ? "Type a thought, memo, or key insight..."
               : "What question needs investigating?..."
           }
-          onInput={(e: any) => setComposerText(e.target.value)}
           onKeyDown={(e: KeyboardEvent) => {
             if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
               e.preventDefault();
@@ -312,17 +377,22 @@ export default function ThisTab({ onViewDetail, onNavigateToLibrary }: ThisTabPr
       </div>
 
       {/* Voice Recording Banner */}
-      {voiceState.isRecording && (
-        <div class="tt-voice-banner">
+      {(voiceState.isRecording || voiceState.error) && (
+        <div class={`tt-voice-banner ${voiceState.error ? "error" : ""}`} role="status" aria-live="polite">
           <div class="tt-voice-top">
-            <span class="tt-live-dot pulse" />
-            <span>Recording Voice Note...</span>
+            <span class={`tt-live-dot ${voiceState.isRecording ? "pulse" : ""}`} />
+            <span>{voiceState.error || "Listening..."}</span>
           </div>
           {(voiceState.transcript || voiceState.interimTranscript) && (
             <div class="tt-voice-text">
               {voiceState.transcript}
               <span style={{ opacity: 0.6 }}>{voiceState.interimTranscript}</span>
             </div>
+          )}
+          {voiceState.error && (
+            <button class="tt-voice-dismiss" onClick={() => setVoiceState({ isRecording: false, transcript: "", interimTranscript: "", status: "idle" })}>
+              Dismiss
+            </button>
           )}
         </div>
       )}

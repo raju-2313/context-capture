@@ -34,6 +34,7 @@ export default defineConfig({
         popup: path.resolve(__dirname, "popup/index.html"),
         options: path.resolve(__dirname, "options/index.html"),
         offscreen: path.resolve(__dirname, "offscreen/offscreen.html"),
+        permissions: path.resolve(__dirname, "permissions.html"),
         background: path.resolve(__dirname, "src/background/index.ts"),
         injected: path.resolve(__dirname, "src/injected/readSelection.ts"),
         selectionTooltip: path.resolve(__dirname, "src/content/selectionTooltip.ts"),
