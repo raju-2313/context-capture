@@ -4,6 +4,7 @@ import { contextLifecycle } from "../../../core/context/lifecycle";
 import { captures as capRepo, contexts as ctxRepo } from "../../../data/repositories";
 import { CaptureCard } from "../../components/CaptureCard";
 import { voiceNoteIntegration, VoiceRecordingState } from "../../../core/integrations/voice";
+import { getActiveTab } from "../activeTab";
 import {
   ScreenshotIcon,
   BookmarkIcon,
@@ -80,8 +81,8 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
 
   async function load() {
     try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (!tab || !tab.id) { setLoading(false); return; }
+      const tab = await getActiveTab();
+      if (!tab || tab.id == null) { setLoading(false); return; }
 
       setCurrentTabTitle(tab.title || "");
       setCurrentTabUrl(tab.url || "");
@@ -113,7 +114,7 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
     if (!composerText.trim() || savingComposer) return;
     setSavingComposer(true);
     try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      const tab = await getActiveTab();
       if (composerType === "note") {
         await capturePipeline.captureNote({
           text: composerText.trim(),
@@ -137,14 +138,14 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
   }
 
   async function captureScreenshot() {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab || !tab.id) return;
+    const tab = await getActiveTab();
+    if (!tab || tab.id == null) return;
     await capturePipeline.captureScreenshot({ tabId: tab.id, windowId: tab.windowId });
     await load();
   }
 
   async function captureBookmark() {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const tab = await getActiveTab();
     if (tab && tab.url && tab.id) {
       await capturePipeline.captureLink({
         url: tab.url,
@@ -248,7 +249,7 @@ export default function ThisTab({ onViewDetail }: { onViewDetail?: (id: string) 
                 if (voiceState.isRecording) {
                   voiceNoteIntegration.stopRecording();
                 } else {
-                  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+                  const tab = await getActiveTab();
                   voiceNoteIntegration.startRecording(
                     (state) => setVoiceState(state),
                     async (finalText) => {
