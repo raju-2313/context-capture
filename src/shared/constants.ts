@@ -14,6 +14,8 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
   undo_window_seconds: "10",
   purge_days: "30",
   storage_warning_percent: "80",
+  stt_provider: "auto",
+  groq_api_key: "",
 };
 
 export const RESTRICTED_URL_PATTERNS = [

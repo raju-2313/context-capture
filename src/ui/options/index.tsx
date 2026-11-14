@@ -324,6 +324,30 @@ export default function Settings() {
             <div class="settings-card">
               <div class="settings-card-header">
                 <div class="settings-card-title-group">
+                  <h3 class="settings-card-title">Voice transcription</h3>
+                  <span class="settings-card-subtitle">Choose browser speech or Groq cloud transcription for the Voice button.</span>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div>
+                  <div style={{ fontWeight: 550, color: "#ffffff" }}>Provider</div>
+                  <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>Cloud audio is sent to Groq and uses your account's limits.</div>
+                </div>
+                <select class="filter-select" value={settings["stt_provider"] || "auto"} onChange={(e) => saveSetting("stt_provider", e.currentTarget.value)}>
+                  <option value="auto">Automatic (Groq when key is configured)</option>
+                  <option value="browser">Browser speech</option>
+                  <option value="groq">Groq cloud</option>
+                </select>
+              </div>
+              <div class="setting-row" style={{ alignItems: "flex-start", flexDirection: "column", gap: 8 }}>
+                <label htmlFor="groq-api-key" style={{ fontWeight: 550, color: "#ffffff" }}>Groq API key</label>
+                <input id="groq-api-key" type="password" class="filter-select" autocomplete="off" value={settings["groq_api_key"] || ""} onInput={(e) => saveSetting("groq_api_key", e.currentTarget.value)} placeholder="gsk_..." />
+                <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Stored only in chrome.storage.local. Get a key from console.groq.com. Audio is uploaded only when you press Stop.</div>
+              </div>
+            </div>
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <div class="settings-card-title-group">
                   <h3 class="settings-card-title">
                     <DatabaseIcon size={16} color="var(--lime)" /> Local Storage Health
                   </h3>

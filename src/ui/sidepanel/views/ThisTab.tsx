@@ -381,7 +381,7 @@ export default function ThisTab({ onViewDetail, onNavigateToLibrary }: ThisTabPr
         <div class={`tt-voice-banner ${voiceState.error ? "error" : ""}`} role="status" aria-live="polite">
           <div class="tt-voice-top">
             <span class={`tt-live-dot ${voiceState.isRecording ? "pulse" : ""}`} />
-            <span>{voiceState.error || "Listening..."}</span>
+            <span>{voiceState.error || (voiceState.status === "transcribing" ? "Transcribing audio..." : "Listening...")}</span>
           </div>
           {(voiceState.transcript || voiceState.interimTranscript) && (
             <div class="tt-voice-text">

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createSttProvider, WebSpeechProvider } from "../../src/core/stt/provider";
+import { createSttProvider, GroqCloudProvider, WebSpeechProvider } from "../../src/core/stt/provider";
 import { VoiceNoteIntegration } from "../../src/core/integrations/voice";
 import { insertTranscriptAtCursor } from "../../src/ui/sidepanel/composer";
 
@@ -120,10 +120,66 @@ describe("speech-to-text provider", () => {
     expect(FakeRecognition.instances).toHaveLength(1);
   });
 
-  it("provides explicit not-implemented provider stubs", () => {
+  it("creates the Groq cloud adapter for the cloud provider kind", () => {
     const provider = createSttProvider("whisper-cloud");
     expect(provider.isSupported()).toBe(false);
-    expect(() => provider.start()).toThrow("not implemented");
+    expect(provider.kind).toBe("groq-cloud");
+  });
+
+  it("reports a missing Groq key without starting capture", () => {
+    vi.stubGlobal("MediaRecorder", class {});
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: vi.fn() },
+    });
+    const onError = vi.fn();
+    new GroqCloudProvider().start({ onError });
+    expect(onError).toHaveBeenCalledWith(expect.objectContaining({ code: "configuration", fatal: true }));
+  });
+
+  it("uploads a multipart recording with the Groq model and emits final text", async () => {
+    const stream = { getTracks: () => [{ stop: vi.fn() }] };
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: vi.fn().mockResolvedValue(stream) },
+    });
+    class FakeRecorder {
+      static last: FakeRecorder;
+      state = "inactive";
+      mimeType = "audio/webm";
+      ondataavailable: ((event: { data: Blob }) => void) | null = null;
+      onstop: (() => void) | null = null;
+      constructor() { FakeRecorder.last = this; }
+      start = vi.fn(() => {
+        this.state = "recording";
+        this.ondataavailable?.({ data: new Blob(["audio"]) });
+      });
+      stop = vi.fn(() => {
+        this.state = "inactive";
+        this.onstop?.();
+      });
+    }
+    vi.stubGlobal("MediaRecorder", FakeRecorder);
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ text: "hello cloud" }) });
+    vi.stubGlobal("fetch", fetchMock);
+    const onResult = vi.fn();
+    const onEnd = vi.fn();
+    const provider = new GroqCloudProvider("gsk_test");
+    provider.start({ onResult, onEnd });
+    await Promise.resolve();
+    provider.stop();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.groq.com/openai/v1/audio/transcriptions",
+      expect.objectContaining({ method: "POST", headers: { Authorization: "Bearer gsk_test" }, body: expect.any(FormData) }),
+    );
+    const body = fetchMock.mock.calls[0][1].body as FormData;
+    expect(body.get("model")).toBe("whisper-large-v3-turbo");
+    expect(body.get("file")).toBeInstanceOf(Blob);
+    expect(onResult).toHaveBeenCalledWith({ transcript: "hello cloud", isFinal: true });
+    expect(onEnd).toHaveBeenCalled();
   });
 
   it("explains when Web Speech is unsupported instead of blaming connectivity", () => {

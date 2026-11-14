@@ -5,7 +5,7 @@ export interface VoiceRecordingState {
   transcript: string;
   interimTranscript: string;
   error?: string;
-  status?: "idle" | "listening" | "error" | "unsupported";
+  status?: "idle" | "listening" | "transcribing" | "error" | "unsupported";
 }
 
 export class VoiceNoteIntegration {
@@ -60,6 +60,11 @@ export class VoiceNoteIntegration {
           });
         },
         onError: (error) => this.handleError(error),
+        onStatus: (status) => {
+          if (status === "transcribing") {
+            onUpdate({ isRecording: true, transcript: this.activeTranscript, interimTranscript: "Transcribing audio...", status });
+          }
+        },
         onEnd: () => {
           if (!this.manuallyStopped || this.terminalError) return;
           const final = this.activeTranscript.trim();

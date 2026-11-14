@@ -13,7 +13,7 @@
     "offscreen"
   ],
   "optional_permissions": [],
-  "host_permissions": [],
+  "host_permissions": ["https://api.groq.com/*"],
   "content_scripts": [],
   "background": {
     "service_worker": "background.js"
