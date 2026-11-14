@@ -1,6 +1,6 @@
 import { useState, useEffect } from "preact/hooks";
 import { render } from "preact/compat";
-import { ScreenshotIcon, BookmarkIcon, ExpandIcon, NoteIcon, QuestionIcon } from "../components/Icons";
+import { BookmarkIcon, ContextIcon, ExpandIcon, GlobeIcon, NoteIcon, QuestionIcon, ScreenshotIcon } from "../components/Icons";
 import { captures as capRepo, contexts as ctxRepo } from "../../data/repositories";
 import { sessionStore } from "../../data/sessionStore";
 
@@ -178,7 +178,7 @@ export default function QuickAdd() {
       {/* ── Header ───────────────────────────────────── */}
       <div class="pq-header">
         <div class="pq-brand">
-          <span class="pq-dot" />
+          <ContextIcon class="pq-brand-icon" size={14} color="var(--lime)" />
           <span class="pq-brand-name">ContextCapture</span>
           <span class="pq-pro-badge">PRO</span>
         </div>
@@ -194,7 +194,7 @@ export default function QuickAdd() {
 
       {/* ── Current page strip ───────────────────────── */}
       <div class="pq-page-strip">
-        <span class="pq-page-dot">●</span>
+        <GlobeIcon class="pq-page-icon" size={13} color="var(--lime)" />
         <div class="pq-page-info">
           <span class="pq-page-title">{titleShort}</span>
           {domainShort && <span class="pq-page-domain">{domainShort}</span>}
