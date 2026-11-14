@@ -101,8 +101,6 @@
           height: 32px;
           padding: 0 10px 0 8px;
           background: rgba(9, 9, 11, 0.96);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
           border: 1px solid rgba(255, 255, 255, 0.14);
           border-radius: 9999px;
           box-shadow: 0 8px 24px -2px rgba(0, 0, 0, 0.75),
@@ -118,7 +116,7 @@
           border-color: rgba(223, 255, 0, 0.6);
           transform: translateY(-1px);
           box-shadow: 0 12px 28px -2px rgba(0, 0, 0, 0.85),
-                      0 0 16px -2px rgba(223, 255, 0, 0.45);
+                      0 0 0 1px rgba(223, 255, 0, 0.18);
         }
 
         .cc-pill-icon {
@@ -149,15 +147,12 @@
 
         /* --- Expanded Menu Card (Clean Craft Floating Menu) --- */
         .cc-menu {
-          width: 270px;
-          background: rgba(9, 9, 11, 0.98);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
+          width: 282px;
+          background: #09090b;
           border: 1px solid rgba(255, 255, 255, 0.12);
-          border-radius: 14px;
-          box-shadow: 0 20px 48px -6px rgba(0, 0, 0, 0.9),
-                      0 0 0 1px rgba(255, 255, 255, 0.05),
-                      0 0 24px -4px rgba(223, 255, 0, 0.25);
+          border-radius: 10px;
+          box-shadow: 0 18px 40px -10px rgba(0, 0, 0, 0.9),
+                      0 0 0 1px rgba(255, 255, 255, 0.04);
           overflow: hidden;
           display: flex;
           flex-direction: column;
@@ -178,11 +173,12 @@
         }
 
         .cc-brand-dot {
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-          background: #DFFF00;
-          box-shadow: 0 0 8px #DFFF00;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 14px;
+          height: 14px;
+          color: #DFFF00;
         }
 
         .cc-title-text {
@@ -198,7 +194,6 @@
           border: none;
           color: #94a3b8;
           cursor: pointer;
-          font-size: 13px;
           padding: 2px 4px;
           border-radius: 4px;
           display: flex;
@@ -243,23 +238,22 @@
           color: #ffffff;
           cursor: pointer;
           text-align: left;
-          transition: all 0.12s ease;
+          transition: background 0.12s ease, border-color 0.12s ease;
         }
 
         .cc-action-item:hover {
           background: rgba(255, 255, 255, 0.06);
           border-color: rgba(255, 255, 255, 0.1);
-          transform: translateX(2px);
         }
 
         .cc-action-item.cc-item-ai {
-          background: rgba(223, 255, 0, 0.08);
-          border: 1px solid rgba(223, 255, 0, 0.25);
+          background: #111114;
+          border: 1px solid rgba(223, 255, 0, 0.38);
         }
 
         .cc-action-item.cc-item-ai:hover {
-          background: rgba(223, 255, 0, 0.16);
-          border-color: rgba(223, 255, 0, 0.5);
+          background: #151518;
+          border-color: rgba(223, 255, 0, 0.65);
         }
 
         .cc-item-icon {
@@ -281,7 +275,7 @@
         }
 
         .cc-action-item.cc-item-ai .cc-item-icon {
-          background: rgba(223, 255, 0, 0.2);
+          background: rgba(223, 255, 0, 0.1);
           color: #DFFF00;
         }
 
@@ -308,7 +302,7 @@
           font-weight: 700;
           padding: 2px 6px;
           border-radius: 4px;
-          background: rgba(223, 255, 0, 0.14);
+          background: rgba(223, 255, 0, 0.1);
           color: #DFFF00;
           letter-spacing: 0.02em;
           text-transform: uppercase;
@@ -320,7 +314,7 @@
           justify-content: space-between;
           padding: 7px 14px 9px;
           border-top: 1px solid rgba(255, 255, 255, 0.06);
-          background: rgba(0, 0, 0, 0.3);
+          background: #070709;
           font-size: 10px;
           color: #71717a;
         }
@@ -438,10 +432,19 @@
       <div class="cc-menu" id="cc-menu-card">
         <div class="cc-menu-header">
           <div class="cc-menu-title">
-            <span class="cc-brand-dot"></span>
+          <span class="cc-brand-dot">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 2.5 20 7v10l-8 4.5L4 17V7l8-4.5Z" />
+              <path d="m4 7 8 4.5L20 7M12 11.5V21.5" />
+            </svg>
+          </span>
             <span class="cc-title-text">ContextCapture</span>
           </div>
-          <button class="cc-close-btn" id="cc-close" title="Dismiss">✕</button>
+        <button class="cc-close-btn" id="cc-close" title="Dismiss" aria-label="Dismiss">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <path d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
         </div>
 
         <div class="cc-preview-box">
@@ -496,7 +499,7 @@
               <div class="cc-item-title">Ask AI / Explain</div>
               <div class="cc-item-desc">Get instant grounded answer</div>
             </div>
-            <span class="cc-item-badge">AI ↗</span>
+            <span class="cc-item-badge">AI</span>
           </button>
 
           <button class="cc-action-item" data-action="copy">
@@ -520,7 +523,7 @@
             </svg>
             Local-first
           </span>
-          <span class="cc-sidepanel-hint">Dedicated Side Panel ↗</span>
+          <span class="cc-sidepanel-hint">Dedicated Side Panel</span>
         </div>
       </div>
     `;
