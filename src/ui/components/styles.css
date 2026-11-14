@@ -27,7 +27,6 @@
   /* Primary Brand: Electric Lime */
   --accent: #DFFF00;
   --accent-hover: #ccee00;
-  --accent-gradient: linear-gradient(135deg, #DFFF00 0%, #b8e600 100%);
   --accent-subtle: rgba(223, 255, 0, 0.12);
   --accent-glow: 0 0 16px rgba(223, 255, 0, 0.35);
 
@@ -3390,12 +3389,7 @@ input:focus, select:focus, textarea:focus {
   gap: 7px;
 }
 
-.pq-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #DFFF00;
-  box-shadow: 0 0 8px rgba(223, 255, 0, 0.6);
+.pq-brand-icon {
   flex-shrink: 0;
 }
 
@@ -3447,12 +3441,10 @@ input:focus, select:focus, textarea:focus {
   background: #0d0d10;
 }
 
-.pq-page-dot {
-  font-size: 6px;
+.pq-page-icon {
   color: #DFFF00;
   margin-top: 4px;
   flex-shrink: 0;
-  line-height: 1;
 }
 
 .pq-page-info {
@@ -3494,7 +3486,7 @@ input:focus, select:focus, textarea:focus {
   align-items: center;
   gap: 5px;
   padding: 3px 8px;
-  border-radius: 20px;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: #a1a1aa;
@@ -3547,8 +3539,9 @@ input:focus, select:focus, textarea:focus {
 }
 .pq-toggle:hover { color: #a1a1aa; }
 .pq-toggle--active {
-  background: #DFFF00;
-  color: #000000 !important;
+  background: transparent;
+  border: 1px solid #DFFF00;
+  color: #DFFF00 !important;
   font-weight: 700;
 }
 

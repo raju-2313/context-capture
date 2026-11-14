@@ -20,6 +20,24 @@ export function SettingsIcon({ size = 16, class: cls, className, style, color = 
   );
 }
 
+export function ContextIcon({ size = 16, class: cls, className, style, color = "currentColor" }: IconProps) {
+  return (
+    <svg width={size} height={size} class={cls || className} style={style} viewBox="0 0 24 24" fill="none" stroke={color} stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2.5 20 7v10l-8 4.5L4 17V7l8-4.5Z" />
+      <path d="m4 7 8 4.5L20 7M12 11.5V21.5" />
+    </svg>
+  );
+}
+
+export function GlobeIcon({ size = 16, class: cls, className, style, color = "currentColor" }: IconProps) {
+  return (
+    <svg width={size} height={size} class={cls || className} style={style} viewBox="0 0 24 24" fill="none" stroke={color} stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
+    </svg>
+  );
+}
+
 export function SparklesIcon({ size = 16, class: cls, className, style, color = "currentColor" }: IconProps) {
   return (
     <svg width={size} height={size} class={cls || className} style={style} viewBox="0 0 24 24" fill="none" stroke={color} stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
