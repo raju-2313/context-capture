@@ -33,6 +33,13 @@ export class MessageRouter {
           });
           break;
         }
+        case "LIST_HIGHLIGHTS":
+          result = await capturePipeline.listHighlights(message.payload.sourceUrl);
+          break;
+        case "UPDATE_HIGHLIGHT_COLOR":
+          await capturePipeline.updateHighlightColor(message.payload.capture_id, message.payload.color);
+          result = { success: true };
+          break;
         case "CAPTURE_NOTE": {
           const { tabId, windowId } = await this.resolveTabAndWindow(message.payload.tabId, message.payload.windowId, _sender.tab);
           result = await capturePipeline.captureNote({

@@ -30,6 +30,8 @@ export const MESSAGE_TYPES = {
   GET_STORAGE_INFO: "GET_STORAGE_INFO",
   OPEN_PANEL: "OPEN_PANEL",
   RECONCILE_BINDINGS: "RECONCILE_BINDINGS",
+  LIST_HIGHLIGHTS: "LIST_HIGHLIGHTS",
+  UPDATE_HIGHLIGHT_COLOR: "UPDATE_HIGHLIGHT_COLOR",
 } as const;
 
 export type MessageType = (typeof MESSAGE_TYPES)[keyof typeof MESSAGE_TYPES];
@@ -48,7 +50,19 @@ export interface CaptureTextMessage extends BaseMessage {
     windowId: number;
     note?: string;
     tags?: string[];
+    anchor?: { prefix: string; suffix: string };
+    highlightColor?: string;
   };
+}
+
+export interface ListHighlightsMessage extends BaseMessage {
+  type: "LIST_HIGHLIGHTS";
+  payload: { sourceUrl: string };
+}
+
+export interface UpdateHighlightColorMessage extends BaseMessage {
+  type: "UPDATE_HIGHLIGHT_COLOR";
+  payload: { capture_id: string; color: string };
 }
 
 export interface CaptureNoteMessage extends BaseMessage {
@@ -280,7 +294,9 @@ export type ExtensionMessage =
   | ImportBackupMessage
   | GetStorageInfoMessage
   | OpenPanelMessage
-  | ReconcileBindingsMessage;
+  | ReconcileBindingsMessage
+  | ListHighlightsMessage
+  | UpdateHighlightColorMessage;
 
 interface BaseResponse {
   id: string;

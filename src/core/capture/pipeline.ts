@@ -19,8 +19,10 @@ class CapturePipeline {
     windowId: number;
     note?: string;
     tags?: string[];
+    anchor?: { prefix: string; suffix: string };
+    highlightColor?: string;
   }): Promise<string> {
-    const { text, tabId, windowId, note, tags } = input;
+    const { text, tabId, windowId, note, tags, anchor, highlightColor } = input;
     if (!text || text.trim().length === 0) {
       throw new Error("Empty selection");
     }
@@ -52,7 +54,8 @@ class CapturePipeline {
       content_text: truncated,
       code_language: null,
       user_note: note ?? null,
-      anchor: null,
+      anchor: anchor ?? null,
+      highlight_color: highlightColor ?? null,
       question_state: null,
       incognito: tab?.incognito ?? false,
       deleted_at: null,
@@ -75,6 +78,22 @@ class CapturePipeline {
 
     logger.info(`Text capture saved: ${captureId} in context ${contextId}`);
     return captureId;
+  }
+
+  async listHighlights(sourceUrl: string): Promise<Array<{ capture_id: string; text: string; anchor: { prefix: string; suffix: string } | null; color: string }>> {
+    const captures = await capRepo.listBySourceUrl(sourceUrl);
+    return captures
+      .filter((capture: any) => capture.anchor && capture.content_text)
+      .map((capture: any) => ({
+        capture_id: capture.capture_id,
+        text: capture.content_text,
+        anchor: capture.anchor,
+        color: capture.highlight_color || "#d1d5db",
+      }));
+  }
+
+  async updateHighlightColor(captureId: string, color: string): Promise<void> {
+    await capRepo.update(captureId, { highlight_color: color });
   }
 
   async captureNote(input: {

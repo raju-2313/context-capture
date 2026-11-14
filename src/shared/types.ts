@@ -34,6 +34,7 @@ export interface Capture {
   code_language: string | null;
   user_note: string | null;
   anchor: { prefix: string; suffix: string } | null;
+  highlight_color?: string | null;
   question_state: "open" | "answered" | null;
   incognito: boolean;
   deleted_at: string | null;

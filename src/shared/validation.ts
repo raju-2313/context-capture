@@ -27,6 +27,7 @@ export const CaptureSchema = z.object({
   anchor: z
     .object({ prefix: z.string(), suffix: z.string() })
     .nullable(),
+  highlight_color: z.string().nullable().optional(),
   question_state: z.enum(["open", "answered"]).nullable(),
   incognito: z.boolean(),
   deleted_at: z.string().datetime().nullable(),

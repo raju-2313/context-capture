@@ -44,6 +44,17 @@ export class CaptureRepository {
     });
   }
 
+  async listBySourceUrl(sourceUrl: string): Promise<any[]> {
+    return tx(["captures"], "readonly", (t) => {
+      return new Promise<any[]>((resolve) => {
+        const req = objectStore(t, "captures").getAll();
+        req.onsuccess = () => resolve((req.result || []).filter(
+          (capture: any) => !capture.deleted_at && capture.type === "text" && capture.source_url === sourceUrl
+        ));
+      });
+    });
+  }
+
   async update(captureId: string, updates: Partial<any>): Promise<void> {
     const existing = await this.get(captureId);
     if (!existing) throw new Error(`Capture ${captureId} not found`);

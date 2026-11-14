@@ -20,6 +20,8 @@ describe("Selection tooltip & in-page popup routing", () => {
           text: "Selected text from document",
           tabId: 0,
           windowId: 0,
+          anchor: { prefix: "before", suffix: "after" },
+          highlightColor: "#d1d5db",
         },
       },
       {
@@ -39,6 +41,8 @@ describe("Selection tooltip & in-page popup routing", () => {
         text: "Selected text from document",
         tabId: 42,
         windowId: 7,
+        anchor: { prefix: "before", suffix: "after" },
+        highlightColor: "#d1d5db",
       })
     );
     expect(response?.success).toBe(true);
@@ -82,6 +86,23 @@ describe("Selection tooltip & in-page popup routing", () => {
     expect(response?.success).toBe(true);
   });
 
+  it("persists a changed highlight color through the existing router", async () => {
+    const updateSpy = vi.spyOn(capturePipeline, "updateHighlightColor").mockResolvedValue(undefined);
+    let response: any = null;
+    await messageRouter.route(
+      {
+        id: "msg-color",
+        type: "UPDATE_HIGHLIGHT_COLOR",
+        timestamp: Date.now(),
+        payload: { capture_id: "cap-123", color: "#fef08a" },
+      },
+      { tab: {} as any },
+      (resp) => { response = resp; }
+    );
+    expect(updateSpy).toHaveBeenCalledWith("cap-123", "#fef08a");
+    expect(response?.success).toBe(true);
+  });
+
   it("opens the dedicated side panel from the selection tooltip footer", async () => {
     const sendMessage = vi.fn().mockResolvedValue(undefined);
     (globalThis as any).chrome.runtime = {
@@ -121,4 +142,5 @@ describe("Selection tooltip & in-page popup routing", () => {
       payload: { targetTab: "thistab" },
     }));
   });
+
 });

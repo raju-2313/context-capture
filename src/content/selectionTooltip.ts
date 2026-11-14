@@ -15,6 +15,18 @@
   let currentSelectionText = "";
   let isExpanded = false;
   let debounceTimer: any = null;
+  const DEFAULT_HIGHLIGHT_COLOR = "#d1d5db";
+  const HIGHLIGHT_COLORS = ["#d1d5db", "#fef08a", "#bbf7d0", "#bfdbfe", "#fbcfe8"];
+  type SavedHighlight = {
+    captureId: string;
+    text: string;
+    anchor: { prefix: string; suffix: string };
+    color: string;
+    range: Range;
+  };
+  const savedHighlights: SavedHighlight[] = [];
+  let hoveredHighlight: SavedHighlight | null = null;
+  let paletteTimer: number | null = null;
 
   function ensureHost(): ShadowRoot {
     if (shadowRoot && hostEl && document.documentElement.contains(hostEl)) {
@@ -38,7 +50,8 @@
 
     (document.body || document.documentElement).appendChild(hostEl);
     shadowRoot = hostEl.attachShadow({ mode: "open" });
-    shadowRoot.innerHTML = getStyles() + `<div id="cc-container" class="cc-container"></div>`;
+    shadowRoot.innerHTML = getStyles() +
+      `<div id="cc-highlights" class="cc-highlights"></div><div id="cc-container" class="cc-container"></div>`;
     return shadowRoot;
   }
 
@@ -69,6 +82,34 @@
           z-index: 2147483647;
           display: none;
           animation: ccPopIn 0.14s ease-out forwards;
+        }
+
+        .cc-highlights {
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          z-index: 2147483646;
+        }
+
+        .cc-color-palette {
+          position: fixed;
+          display: flex;
+          gap: 5px;
+          padding: 5px;
+          background: #111113;
+          border: 1px solid #3f3f46;
+          border-radius: 999px;
+          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+          pointer-events: auto;
+        }
+
+        .cc-color-button {
+          width: 15px;
+          height: 15px;
+          padding: 0;
+          border: 1px solid rgba(255, 255, 255, 0.45);
+          border-radius: 50%;
+          cursor: pointer;
         }
 
         @keyframes ccPopIn {
@@ -362,6 +403,168 @@
     if (!sel || sel.isCollapsed || sel.rangeCount === 0) {
       return { text: "", rect: null };
     }
+
+    function getSelectionAnchor(range: Range): { prefix: string; suffix: string } {
+      try {
+        const before = range.cloneRange();
+        before.selectNodeContents(document.body);
+        before.setEnd(range.startContainer, range.startOffset);
+        const after = range.cloneRange();
+        after.selectNodeContents(document.body);
+        after.setStart(range.endContainer, range.endOffset);
+        return {
+          prefix: before.toString().slice(-80),
+          suffix: after.toString().slice(0, 80),
+        };
+      } catch {
+        return { prefix: "", suffix: "" };
+      }
+    }
+
+    function getTextNodes(): Text[] {
+      const nodes: Text[] = [];
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      let node: Node | null;
+      while ((node = walker.nextNode())) nodes.push(node as Text);
+      return nodes;
+    }
+
+    function findRange(text: string, anchor: { prefix: string; suffix: string }): Range | null {
+      const nodes = getTextNodes();
+      const fullText = nodes.map((node) => node.data).join("");
+      let index = fullText.indexOf(text);
+      while (index >= 0) {
+        const prefix = fullText.slice(Math.max(0, index - anchor.prefix.length), index);
+        const suffix = fullText.slice(index + text.length, index + text.length + anchor.suffix.length);
+        if ((!anchor.prefix || prefix.endsWith(anchor.prefix)) && (!anchor.suffix || suffix.startsWith(anchor.suffix))) {
+          let startNode: Text | null = null;
+          let endNode: Text | null = null;
+          let startOffset = 0;
+          let endOffset = 0;
+          let cursor = 0;
+          for (const node of nodes) {
+            const next = cursor + node.data.length;
+            if (!startNode && index >= cursor && index <= next) {
+              startNode = node;
+              startOffset = index - cursor;
+            }
+            if (index + text.length >= cursor && index + text.length <= next) {
+              endNode = node;
+              endOffset = index + text.length - cursor;
+              break;
+            }
+            cursor = next;
+          }
+          if (startNode && endNode) {
+            const range = document.createRange();
+            range.setStart(startNode, startOffset);
+            range.setEnd(endNode, endOffset);
+            return range;
+          }
+        }
+        index = fullText.indexOf(text, index + 1);
+      }
+      return null;
+    }
+
+    function setCssHighlight(highlight: SavedHighlight) {
+      const highlights = (globalThis.CSS as any)?.highlights;
+      const HighlightConstructor = (globalThis as any).Highlight;
+      if (!highlights || !HighlightConstructor) return;
+      const key = `cc-${highlight.captureId}`;
+      highlights.set(key, new HighlightConstructor(highlight.range));
+      const highlightStyle = document.querySelector(`style[data-cc-highlight-color="${key}"]`) as HTMLStyleElement | null;
+      highlightStyle?.remove();
+      const styleTag = document.createElement("style");
+      styleTag.dataset["ccHighlightColor"] = key;
+      styleTag.textContent = `::highlight(${key}) { background-color: ${highlight.color}; color: inherit; }`;
+      document.head.appendChild(styleTag);
+    }
+
+    function renderColorPalette() {
+      const root = shadowRoot?.querySelector("#cc-highlights") as HTMLElement | null;
+      if (!root || !hoveredHighlight) return;
+      const rect = hoveredHighlight.range.getBoundingClientRect();
+      root.innerHTML = `<div class="cc-color-palette" id="cc-color-palette" style="left:${Math.max(8, rect.right - 100)}px;top:${Math.max(8, rect.top - 34)}px;">${
+        HIGHLIGHT_COLORS.map((color) => `<button class="cc-color-button" data-color="${color}" style="background:${color}" aria-label="Use ${color}"></button>`).join("")
+      }</div>`;
+      root.querySelectorAll(".cc-color-button").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const color = (button as HTMLElement).dataset["color"];
+          if (!color || !hoveredHighlight) return;
+          hoveredHighlight.color = color;
+          setCssHighlight(hoveredHighlight);
+          try {
+            chrome.runtime.sendMessage({
+              id: crypto.randomUUID(),
+              type: "UPDATE_HIGHLIGHT_COLOR",
+              timestamp: Date.now(),
+              payload: { capture_id: hoveredHighlight.captureId, color },
+            });
+          } catch (error) {
+            console.warn("[ContextCapture] Error updating highlight color", error);
+          }
+          root.innerHTML = "";
+        });
+      });
+    }
+
+    function showHighlightPalette(highlight: SavedHighlight) {
+      hoveredHighlight = highlight;
+      if (paletteTimer !== null) window.clearTimeout(paletteTimer);
+      renderColorPalette();
+    }
+
+    function scheduleHidePalette() {
+      if (paletteTimer !== null) window.clearTimeout(paletteTimer);
+      paletteTimer = window.setTimeout(() => {
+        const palette = shadowRoot?.querySelector("#cc-color-palette");
+        if (palette && !(palette.matches(":hover"))) {
+          hoveredHighlight = null;
+          palette.parentElement?.replaceChildren();
+        }
+      }, 180);
+    }
+
+    function highlightAtPoint(x: number, y: number): SavedHighlight | null {
+      return savedHighlights.find((highlight) =>
+        Array.from(highlight.range.getClientRects()).some((rect) =>
+          x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
+        )
+      ) ?? null;
+    }
+
+    function applySavedHighlight(highlight: SavedHighlight) {
+      setCssHighlight(highlight);
+    }
+
+    function getCurrentRange(): Range | null {
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return null;
+      return selection.getRangeAt(0).cloneRange();
+    }
+
+    async function loadSavedHighlights() {
+      if (!location.href.startsWith("http")) return;
+      try {
+        const response = await chrome.runtime.sendMessage({
+          id: crypto.randomUUID(),
+          type: "LIST_HIGHLIGHTS",
+          timestamp: Date.now(),
+          payload: { sourceUrl: location.href },
+        });
+        if (!response?.success) return;
+        for (const item of response.data || []) {
+          const range = findRange(item.text, item.anchor);
+          if (!range) continue;
+          const highlight = { ...item, range } as SavedHighlight;
+          savedHighlights.push(highlight);
+          applySavedHighlight(highlight);
+        }
+      } catch {}
+    }
     const text = sel.toString().trim();
     if (text.length < 2) {
       return { text: "", rect: null };
@@ -380,6 +583,152 @@
     } catch {
       return { text: "", rect: null };
     }
+  }
+
+  function getSelectionAnchor(range: Range): { prefix: string; suffix: string } {
+    try {
+      const before = range.cloneRange();
+      before.selectNodeContents(document.body);
+      before.setEnd(range.startContainer, range.startOffset);
+      const after = range.cloneRange();
+      after.selectNodeContents(document.body);
+      after.setStart(range.endContainer, range.endOffset);
+      return { prefix: before.toString().slice(-80), suffix: after.toString().slice(0, 80) };
+    } catch {
+      return { prefix: "", suffix: "" };
+    }
+  }
+
+  function getCurrentRange(): Range | null {
+    const selection = window.getSelection();
+    return selection && selection.rangeCount > 0 && !selection.isCollapsed
+      ? selection.getRangeAt(0).cloneRange()
+      : null;
+  }
+
+  function findRange(text: string, anchor: { prefix: string; suffix: string }): Range | null {
+    const nodes: Text[] = [];
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let node: Node | null;
+    while ((node = walker.nextNode())) nodes.push(node as Text);
+    const fullText = nodes.map((item) => item.data).join("");
+    let index = fullText.indexOf(text);
+    while (index >= 0) {
+      const prefix = fullText.slice(Math.max(0, index - anchor.prefix.length), index);
+      const suffix = fullText.slice(index + text.length, index + text.length + anchor.suffix.length);
+      if ((!anchor.prefix || prefix.endsWith(anchor.prefix)) && (!anchor.suffix || suffix.startsWith(anchor.suffix))) {
+        let cursor = 0;
+        let startNode: Text | null = null;
+        let endNode: Text | null = null;
+        let startOffset = 0;
+        let endOffset = 0;
+        for (const textNode of nodes) {
+          const next = cursor + textNode.data.length;
+          if (!startNode && index >= cursor && index <= next) {
+            startNode = textNode;
+            startOffset = index - cursor;
+          }
+          if (index + text.length >= cursor && index + text.length <= next) {
+            endNode = textNode;
+            endOffset = index + text.length - cursor;
+            break;
+          }
+          cursor = next;
+        }
+        if (startNode && endNode) {
+          const range = document.createRange();
+          range.setStart(startNode, startOffset);
+          range.setEnd(endNode, endOffset);
+          return range;
+        }
+      }
+      index = fullText.indexOf(text, index + 1);
+    }
+    return null;
+  }
+
+  function applySavedHighlight(highlight: SavedHighlight) {
+    const highlights = (globalThis.CSS as any)?.highlights;
+    const HighlightConstructor = (globalThis as any).Highlight;
+    if (!highlights || !HighlightConstructor) return;
+    const key = `cc-${highlight.captureId}`;
+    highlights.set(key, new HighlightConstructor(highlight.range));
+    document.querySelector(`style[data-cc-highlight-color="${key}"]`)?.remove();
+    const styleTag = document.createElement("style");
+    styleTag.dataset["ccHighlightColor"] = key;
+    styleTag.textContent = `::highlight(${key}) { background-color: ${highlight.color}; color: inherit; }`;
+    document.head.appendChild(styleTag);
+  }
+
+  function highlightAtPoint(x: number, y: number): SavedHighlight | null {
+    return savedHighlights.find((highlight) =>
+      Array.from(highlight.range.getClientRects()).some((rect) =>
+        x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
+      )
+    ) ?? null;
+  }
+
+  function renderColorPalette() {
+    const root = shadowRoot?.querySelector("#cc-highlights") as HTMLElement | null;
+    if (!root || !hoveredHighlight) return;
+    const rect = hoveredHighlight.range.getBoundingClientRect();
+    root.innerHTML = `<div class="cc-color-palette" id="cc-color-palette" style="left:${Math.max(8, rect.right - 100)}px;top:${Math.max(8, rect.top - 34)}px;">${
+      HIGHLIGHT_COLORS.map((color) => `<button class="cc-color-button" data-color="${color}" style="background:${color}" aria-label="Use ${color}"></button>`).join("")
+    }</div>`;
+    root.querySelectorAll(".cc-color-button").forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const color = (button as HTMLElement).dataset["color"];
+        if (!color || !hoveredHighlight) return;
+        hoveredHighlight.color = color;
+        applySavedHighlight(hoveredHighlight);
+        chrome.runtime.sendMessage({
+          id: crypto.randomUUID(),
+          type: "UPDATE_HIGHLIGHT_COLOR",
+          timestamp: Date.now(),
+          payload: { capture_id: hoveredHighlight.captureId, color },
+        }).catch(() => {});
+        root.innerHTML = "";
+      });
+    });
+  }
+
+  function showHighlightPalette(highlight: SavedHighlight) {
+    hoveredHighlight = highlight;
+    if (paletteTimer !== null) window.clearTimeout(paletteTimer);
+    renderColorPalette();
+  }
+
+  function scheduleHidePalette() {
+    if (paletteTimer !== null) window.clearTimeout(paletteTimer);
+    paletteTimer = window.setTimeout(() => {
+      const palette = shadowRoot?.querySelector("#cc-color-palette");
+      if (palette && !palette.matches(":hover")) {
+        hoveredHighlight = null;
+        palette.parentElement?.replaceChildren();
+      }
+    }, 180);
+  }
+
+  async function loadSavedHighlights() {
+    if (!location.href.startsWith("http")) return;
+    try {
+      const response = await chrome.runtime.sendMessage({
+        id: crypto.randomUUID(),
+        type: "LIST_HIGHLIGHTS",
+        timestamp: Date.now(),
+        payload: { sourceUrl: location.href },
+      });
+      if (!response?.success) return;
+      for (const item of response.data || []) {
+        const range = findRange(item.text, item.anchor);
+        if (!range) continue;
+        const highlight = { ...item, range } as SavedHighlight;
+        savedHighlights.push(highlight);
+        applySavedHighlight(highlight);
+      }
+    } catch {}
   }
 
   function positionContainer(container: HTMLElement, rect: DOMRect) {
@@ -578,14 +927,35 @@
 
     switch (action) {
       case "highlight": {
+        const range = getCurrentRange();
+        if (!range) break;
+        const anchor = getSelectionAnchor(range);
+        const captureId = crypto.randomUUID();
+        const highlight: SavedHighlight = {
+          captureId,
+          text: textToCapture,
+          anchor,
+          color: DEFAULT_HIGHLIGHT_COLOR,
+          range,
+        };
+        savedHighlights.push(highlight);
+        applySavedHighlight(highlight);
         showToast(container, "Saved to Tab Context");
         try {
           chrome.runtime.sendMessage({
             id: crypto.randomUUID(),
             type: "CAPTURE_TEXT",
             timestamp: Date.now(),
-            payload: { text: textToCapture },
-          });
+            payload: { text: textToCapture, anchor, highlightColor: DEFAULT_HIGHLIGHT_COLOR },
+          }).then((response) => {
+            if (response?.success && response.data) {
+              const highlights = (globalThis.CSS as any)?.highlights;
+              highlights?.delete(`cc-${highlight.captureId}`);
+              document.querySelector(`style[data-cc-highlight-color="cc-${highlight.captureId}"]`)?.remove();
+              highlight.captureId = response.data;
+              applySavedHighlight(highlight);
+            }
+          }).catch(() => {});
           chrome.runtime.sendMessage({
             id: crypto.randomUUID(),
             type: "OPEN_PANEL",
@@ -740,6 +1110,15 @@
     }, 150);
   });
 
+  document.addEventListener("mousemove", (event) => {
+    const highlight = highlightAtPoint(event.clientX, event.clientY);
+    if (highlight) {
+      showHighlightPalette(highlight);
+    } else {
+      scheduleHidePalette();
+    }
+  }, { passive: true });
+
   document.addEventListener("mousedown", (e) => {
     // If click is outside shadow host, dismiss
     const target = e.target as HTMLElement;
@@ -767,6 +1146,8 @@
       }
     }
   }, { passive: true });
+
+  void loadSavedHighlights();
 
   // Listen for GET_SELECTION queries from popup
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
